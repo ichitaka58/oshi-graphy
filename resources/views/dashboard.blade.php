@@ -5,7 +5,7 @@
         <div class="flex items-center gap-1">
             <img src="{{ auth()->user()->icon_url }}" alt="アイコン画像" class="inline-block w-8 h-8 rounded-full object-cover border">
             <h2 class="font-semibold text-lg sm:text-2xl text-gray-800 dark:text-gray-200 leading-tight">
-                {{ auth()->user()->name }}さんのダッシュボード
+                <span class="text-red-400">{{ auth()->user()->name }}</span>さんのダッシュボード
             </h2>
         </div>
     </x-slot>
