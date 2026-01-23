@@ -3,6 +3,7 @@
 'initialFollowing' => false,
 'followingsCount' => 0,
 'followersCount' => 0,
+'isBlocking',
 ])
 
 @php
@@ -52,7 +53,8 @@ $unfollowUrl = route('users.follow.destroy', $user);
       }
     }
   }">
-  @if(auth()->user()->id !== $user->id)
+  {{-- 自分以外のprofileかつブロックしてないユーザーでフォローボタンを表示 --}}
+  @if((auth()->user()->id !== $user->id) && !$isBlocking)
   <button
     type="button"
     x-data="{ hover : false }"

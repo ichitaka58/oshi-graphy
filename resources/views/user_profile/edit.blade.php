@@ -5,6 +5,16 @@
         <h2 class="text-lg sm:text-2xl font-semibold">プロフィール編集</h2>
     </x-slot>
 
+    {{-- パンくず --}}
+    <nav class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-3 sm:mt-5 flex justify-between items-center text-[11px] text-gray-600 dark:text-gray-300 sm:text-base no-print">
+        <div>
+            <a href="{{ route('public.diaries.user', $user) }}" class="underline">{{ $user->name }}さんのページ</a>
+            <span class="mx-1">/</span>
+            <span>プロフィール編集</span>
+        </div>
+        <div x-data @click="history.back()" class="underline cursor-pointer">戻る</div>
+    </nav>
+
     <div class="max-w-5xl w-full mx-auto px-4 py-4 sm:py-6">
         <div class="max-w-3xl mx-auto border rounded-2xl px-4 sm:px-8 py-6 shadow bg-white dark:bg-gray-800 ">
             <form method="post" action="{{ route('user.profile.update') }}" enctype="multipart/form-data" class="space-y-4">
@@ -63,7 +73,6 @@
                 </div>
 
                 <div class="flex justify-end gap-2 pt-2">
-                    <x-secondary-button onclick="history.back()">前のページに戻る</x-secondary-button>
                     <x-primary-button>保存</x-primary-button>
                 </div>
             </form>

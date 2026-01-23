@@ -19,7 +19,6 @@ $isBlocking = auth()->user()->isBlocking($user);
             <span>プロフィール</span>
         </div>
         <div x-data @click="history.back()" class="underline cursor-pointer">戻る</div>
-
     </nav>
 
     <div class="max-w-5xl w-full mx-auto px-4 py-4 sm:py-6">
@@ -30,7 +29,7 @@ $isBlocking = auth()->user()->isBlocking($user);
                     <div>
                         <div class="text-2xl font-semibold dark:text-gray-300">{{ $user->name }}</div>
                         {{-- フォローボタン＆フォロー、フォロワー数 --}}
-                        <x-follow-button :user="$user" :initialFollowing="$isFollowing" :followingsCount="$followingsCount" :followersCount="$followersCount" />
+                        <x-follow-button :user="$user" :initialFollowing="$isFollowing" :followingsCount="$followingsCount" :followersCount="$followersCount" :isBlocking="$isBlocking" />
                     </div>
                 </div>
                 {{-- 右上の三点リーダアイコンメニュー --}}
