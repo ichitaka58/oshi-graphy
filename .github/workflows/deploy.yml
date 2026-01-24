@@ -2,25 +2,28 @@ name: Deploy oshi-graphy to Sakura
 
 on:
   push:
-    branches: [main]
+    branches: [ "main" ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-    - name: Deploy via SSH
-      uses: appleboy/ssh-action@v1.2.4
-      with:
-        host: ${{ secrets.SAKURA_HOST }}
-        username: ${{ secrets.SAKURA_USER }}
-        key: ${{ secrets.SAKURA_SSH_KEY }}
-        port: 22
-        script: |
-          set -e
-          cd ~/project
-          php artisan down --secret="oshi-graphy-deploy" || true
-          trap 'php artisan up || true' EXIT
-          git pull origin main
-          composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
-          php artisan migrate --force
-          php artisan optimize:clear
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.4
+
+        with: 
+          host: ${{ secrets.SAKURA_HOST }}
+          username: ${{ secrets.SAKURA_USER }}
+          key: ${{ secrets.SAKURA_SSH_KEY }}
+          port: 22
+
+          script: |
+            set -e
+            cd ~/project
+            php artisan down --secret="oshi-graphy-deploy" || true
+            trap 'php artisan up || true' EXIT
+            git pull origin main
+            composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+            php artisan migrate --force
+            php artisan optimize:clear
