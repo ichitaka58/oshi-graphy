@@ -7,6 +7,7 @@
 [![MySQL](https://img.shields.io/badge/MySQL_8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Alpine.js](https://img.shields.io/badge/Alpine.js-8BC0D0?style=for-the-badge&logo=alpinedotjs&logoColor=white)](https://alpinejs.dev/)
+[![Pest](https://img.shields.io/badge/Pest-222222?style=for-the-badge&logo=pest&logoColor=white)](https://pestphp.com/)
 
 **【アプリ公開URL】:** [https://ichitaka58.sakura.ne.jp/oshi-graphy/](https://ichitaka58.sakura.ne.jp/oshi-graphy/)
 
