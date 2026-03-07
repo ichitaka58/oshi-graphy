@@ -1,40 +1,113 @@
-## 制作アプリのタイトル
-Oshi Graphy （推しグラフィー）
-## 制作アプリの説明
-Oshi-Graphy（推しグラフィー）は、<br>
-80〜90年代から今も活躍するアーティストの推し活を楽しむ中高年世代を対象にした<br>
-推し活ダイアリー共有アプリです。<br>
-ライブ参戦や日常の推し活を日記として残し、同じ世代の仲間と共有・交流できる場を提供します。
-## 主な機能
-- ダイアリー（公開／非公開、画像添付、推しアーティスト紐付け）
-- コメント & いいね（ダイアリー／コメント）
-- フォロー機能（ユーザー間の相互フォロー／フォロワー一覧）
-- ブロック機能（ユーザー間の相互ブロック／ブロックユーザー一覧）
-- ユーザープロフィール（アイコン画像・自己紹介）
-- 通知（既読管理、ベルの未読数、通知リスト／詳細リンク）
-- アーティスト管理（管理者のみ：CRUD）
-- ダッシュボード（通知一覧、クイックリンク）
-- AIアシスト（日記下書き補助）※Gemini API 連携
-- 検索 UI（Select2 などの補助 UI、一部ページで利用）
-- レスポンシブデザイン、ダークモード対応
-## 技術スタック
-- Backend : Laravel 12, PHP 8.4
-- DB : MySQL 8
-- Frontend : Tailwind CSS / Alpine.js / Vite / Blade Components
-- Auth : Laravel Breeze（JP ローカライズ）
-- AI / API連携 : Gemini API ( Google Generative AI)
-- Environment :
-  - Docker / Laravel Sail ( ローカル開発環境 )
-  - さくらレンタルサーバ ( 本番環境 PHP 8.3 )
+# Oshi-Graphy（推しグラフィー）
 
-## デプロイ
-GitHub Actionsにより、mainブランチへのpushをトリガーに、<br>
-さくらレンタルサーバへSSH接続し、自動デプロイを実施。<br>
-デプロイ時はLaravelのメンテナンスモードを使用し、<br>
-依存関係の更新・マイグレーション・キャッシュクリアを自動化しています。
+![Oshi-Graphy](./docs/top_page.png)
 
-## ER Diagram
-主要エンティティのリレーション構造
+[![PHP](https://img.shields.io/badge/PHP_8.4-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://php.net/)
+[![Laravel](https://img.shields.io/badge/Laravel_12-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
+[![MySQL](https://img.shields.io/badge/MySQL_8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Alpine.js](https://img.shields.io/badge/Alpine.js-8BC0D0?style=for-the-badge&logo=alpinedotjs&logoColor=white)](https://alpinejs.dev/)
+
+**【アプリ公開URL】:** [https://ichitaka58.sakura.ne.jp/oshi-graphy/](https://ichitaka58.sakura.ne.jp/oshi-graphy/)
+
+## 📖 アプリの概要
+Oshi-Graphy（推しグラフィー）は、80〜90年代から今も活躍するアーティストの推し活を楽しむ**中高年世代を対象**にした推し活ダイアリー共有アプリです。
+
+ライブ参戦や日常の推し活を日記として残し、同じ世代の仲間と共有・交流できる、落ち着いたクローズドな場を提供します。
+
+### 💡 制作の背景・目的
+推し活の思い出を一つにまとめて残せる場として、また既存の推し活アプリは若年層向けが多く、同世代の同じアーティストのファンと落ち着いて交流できる場として、このアプリを開発しました。
+
+## ✨ 主な機能
+- **ダイアリー機能**
+  - 公開／非公開設定
+  - 画像添付
+  - 推しアーティストの紐付け機能
+- **交流機能**
+  - コメント & いいね（ダイアリー／コメントに対するスレッド形式）
+  - フォロー機能（ユーザー間の相互フォロー／フォロワー一覧）
+- **マイページ・ユーザー管理**
+  - ユーザープロフィール（アイコン画像・自己紹介）
+  - ブロック機能（ユーザー間の相互ブロック／ブロックユーザー一覧）
+- **通知・ダッシュボード機能**
+  - 既読管理、ベルアイコンでの未読数表示、通知リスト／詳細リンク
+  - ダッシュボード（通知一覧、クイックリンク）
+  - 管理者向け：アーティスト情報管理（CRUD）
+- **AIアシスト機能 / 検索補助**
+  - Gemini API連携による日記下書き補助（AIアシスト）
+  - Select2 などを用いた検索UI補助
+- **UI / UX**
+  - レスポンシブデザイン
+  - ダークモード対応
+
+## 🛠 技術スタック
+
+### Backend / DB
+- PHP 8.4
+- Laravel 12
+- MySQL 8
+
+### Frontend
+- Tailwind CSS / Alpine.js / Vite / Blade Components
+
+### Auth / API
+- Laravel Breeze（JP ローカライズ）
+- Gemini API (Google Generative AI)
+
+### Infrastructure / Environment
+- **ローカル開発環境**: Docker / Laravel Sail
+- **本番環境**: さくらレンタルサーバ (PHP 8.3)
+- **CI/CD**: GitHub Actions
+
+## 🚀 デプロイの仕組み
+GitHub Actionsにより、`main`ブランチへのpushをトリガーにして、さくらレンタルサーバへSSH接続し、**自動デプロイ**を実施しています。
+デプロイ時はLaravelのメンテナンスモードを使用し、依存関係の更新（composer）、マイグレーション、キャッシュクリアを自動化しています。
+
+## 🖥 開発環境の構築（ローカル）
+
+Laravel Sail環境を利用してローカル環境を構築する手順です。
+
+```bash
+# 1. リポジトリのクローン
+git clone https://github.com/ichitaka58/oshi-graphy.git
+cd oshi-graphy
+
+# 2. 環境変数の設定
+cp .env.example .env
+
+# 3. コンテナのビルドと起動
+./vendor/bin/sail up -d
+
+# 4. パッケージのインストール
+./vendor/bin/sail composer install
+./vendor/bin/sail npm install
+
+# 5. アプリケーションキーの生成
+./vendor/bin/sail artisan key:generate
+
+# 6. マイグレーションとシードの実行（必要に応じて）
+./vendor/bin/sail artisan migrate --seed
+
+# 7. フロントエンドのビルド
+./vendor/bin/sail npm run dev
+```
+
+設定完了後、`http://localhost` にアクセスして動作を確認できます。
+
+## 🧪 テスト
+
+Pestを使用して、主要な機能に対する自動テスト（フィーチャーテスト・ユニットテスト）を実装しています。
+ローカル環境構築後、以下のコマンドでテストを実行し、動作確認が行えます。
+
+```bash
+./vendor/bin/sail php artisan test
+```
+
+## 📊 ER Diagram
+主要エンティティのリレーション構造です。
+
+<details>
+<summary>ER図を表示する</summary>
 
 ```mermaid
 erDiagram
@@ -144,3 +217,4 @@ erDiagram
         datetime updated_at
     }
 ```
+</details>
