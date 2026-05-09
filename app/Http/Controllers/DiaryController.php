@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Diary;
 use App\Models\Artist;
 use App\Models\Comment;
+use App\Services\DiaryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -15,40 +16,29 @@ use Throwable;
 
 class DiaryController extends Controller
 {
+    // オブジェクトが持つ変数（プロパティ）として宣言。他のメソッドから $this->diaryService で使える
+    protected $diaryService;
+
+    // コンストラクタ：クラスのインスタンス生成時に自動で呼ばれる
+    // 引数に型（DiaryService）を書くだけで、Laravelが自動で new DiaryService() して渡してくれる（依存性注入）
+    public function __construct(DiaryService $diaryService)
+    {
+        // 引数で受け取った $diaryService をプロパティに保存する
+        // $this = このオブジェクト自身を指す特別な変数
+        $this->diaryService = $diaryService;
+    }
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $user = $request->user();
-
-        $year = $request->integer('year');
-        $artist = $request->integer('artist');
-
-        $diaries = $user->diaries()
-            ->with(['artist', 'coverImage'])
-            // when:$yearがあれば、関数を実行。if($year)と同じ
-            ->when($year, fn($q) => $q->whereYear('happened_on', $year))
-            ->when($artist, fn($q) => $q->where('artist_id', $artist))
-            ->withCount(['comments', 'likes']) // コメント数、いいね数
-            ->withExists(['likes as liked_by_me' => fn($q) => $q->where('user_id', auth()->id())])
-            ->orderBy('happened_on', 'desc') // まず日付の新しい順
-            ->orderBy('updated_at', 'desc') // 同じ日付の中で更新の新しい順
-            ->paginate(6) // ページネーション付きで取得
-            ->withQueryString(); // 次のページにも検索条件を引き継ぐ
-
-        $minDate = Diary::min('happened_on');
-        // 日付を扱う時はCarbonが便利
-        $minYear = $minDate ? Carbon::parse($minDate)->year : 2021;
-        $years = range(now()->year, $minYear);
-        // artist_tableからidがdiaries.artist_idに一致するものに絞り込む
-        $artists = Artist::whereIn('id', function ($q)  use ($user) {
-            $q->select('artist_id')
-                ->from('diaries') // diariesからartist_idの一覧を取り出す
-                ->where('user_id', $user->id) // そのユーザーが書いた日記に限定
-                ->whereNotNull('artist_id');
-        })->orderBy('name')
-            ->get(['id', 'name']);
+        [
+            'diaries' => $diaries,
+            'years' => $years,
+            'artists' => $artists,
+            'year' => $year,
+            'artist' => $artist,
+        ]  = $this->diaryService->allDiaries($request);
 
         return view('diaries.index', compact('diaries', 'years', 'artists', 'year', 'artist'));
     }
@@ -85,8 +75,8 @@ class DiaryController extends Controller
             'is_public' => $validated['is_public'],
         ]);
 
-        if($request->hasFile('images')) {
-            foreach($request->file('images') as $imageFile) {
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $imageFile) {
                 $ext = strtolower($imageFile->getClientOriginalExtension());
                 $filename = $diary->id . '_' . now()->format('YmdHis') . '_' . uniqid() . '.' . $ext;
                 $path = $imageFile->storeAs('diary_images', $filename, 'public');
@@ -98,7 +88,7 @@ class DiaryController extends Controller
         return redirect()
             ->route('diaries.index')
             ->with('status', '日記を保存しました')->with('status_type', 'success');
-            // セッションに一時的なデータ（フラッシュデータ）を保存するメソッド
+        // セッションに一時的なデータ（フラッシュデータ）を保存するメソッド
     }
 
     /**
@@ -109,7 +99,7 @@ class DiaryController extends Controller
         Gate::authorize('view', $diary);
 
         $diary->load(['user'])
-            ->loadCount(['comments','likes'])
+            ->loadCount(['comments', 'likes'])
             ->loadExists([
                 'likes as liked_by_me' => fn($q) => $q->where('user_id', auth()->id()),
             ]);
@@ -171,9 +161,9 @@ class DiaryController extends Controller
 
         // 画像の物理削除とDBの削除
         $deleteIds = $request->input('delete_images', []);
-        if(!empty($deleteIds)) {
+        if (!empty($deleteIds)) {
             $images = $diary->images()->whereIn('id', $deleteIds)->get();
-            foreach($images as $image) {
+            foreach ($images as $image) {
                 Storage::disk('public')->delete($image->path);
                 $image->delete();
             }
@@ -189,7 +179,7 @@ class DiaryController extends Controller
                 $diary->images()->create(['path' => $path]);
             }
         }
-        
+
         return redirect()
             ->route('diaries.show', $diary)
             ->with('status', '日記を更新しました')->with('status_type', 'success');
