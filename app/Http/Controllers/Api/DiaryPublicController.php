@@ -46,7 +46,6 @@ class DiaryPublicController extends Controller
 
         $artistName = $artistId ? Artist::find($artistId)->name : null;
 
-        // return view('public_diaries.index', compact('diaries', 'years', 'months', 'year', 'month', 'artistId', 'artistName'));
         return response()->json([
             'diaries' => $diaries,
             'years' => $years,
@@ -86,7 +85,6 @@ class DiaryPublicController extends Controller
             ])
             ->get();
 
-        // return view('public_diaries.show', compact('diary', 'comments'));
         return response()->json([
             'diary' => $diary,
             'comments' => $comments,
@@ -128,8 +126,6 @@ class DiaryPublicController extends Controller
                 ->whereNotNull('artist_id');
         })->orderBy('name')
             ->get(['id', 'name']);
-
-        // return view('public_diaries.user', compact('diaries', 'years', 'year', 'artists', 'artist', 'user'));
 
         return response()->json([
             'diaries' => $diaries,
