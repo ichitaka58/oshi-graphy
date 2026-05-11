@@ -3,22 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Models\Diary;
-use App\Models\User;
+use App\Services\DiaryLikeService;
 use Illuminate\Http\Request;
 
 
 class DiaryLikeController extends Controller
 {
+    protected $diaryLikeService;
+
+    public function __construct(DiaryLikeService $diaryLikeService)
+    {
+        $this->diaryLikeService = $diaryLikeService;
+    }
 
     /**
      * いいねしたユーザーの一覧を生成
      */
     public function index(Diary $diary)
     {
-        $likers = $diary->likers()
-                ->orderByPivot('created_at', 'desc') // 中間テーブルlikesのcreated_atで並べる。
-                ->paginate(10)
-                ->withQueryString();
+        $likers = $this->diaryLikeService->getLikers($diary);
 
         return view('diaries.likes.index', compact('diary', 'likers'));
     }
@@ -26,11 +29,10 @@ class DiaryLikeController extends Controller
     /**
      * いいね情報を保存、通知を作成
      */
-    public function store(Request $request ,Diary $diary)
+    public function store(Request $request, Diary $diary)
     {
-        $like = $diary->likes()->firstOrCreate([
-            'user_id' => $request->user()->id,
-        ]);
+        $this->diaryLikeService->likeDiary($request, $diary);
+
 
         return response()->json([
             'ok' => true,
@@ -43,14 +45,8 @@ class DiaryLikeController extends Controller
 
     public function destroy(Request $request, Diary $diary)
     {
-        $like = $diary->likes()
-             ->where('user_id', $request->user()->id)
-             ->first();
-        
-        if($like) {
-            $like->delete(); // モデルのdeleteなのでdeleteイベントが発火
-        }
-        
+        $this->diaryLikeService->unlikeDiary($request, $diary);
+
         return response()->json([
             'ok' => true,
             'liked' => false,
