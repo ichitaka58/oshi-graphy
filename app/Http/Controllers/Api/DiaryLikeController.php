@@ -42,7 +42,7 @@ class DiaryLikeController extends Controller
             'ok' => true,
             'liked' => true,
             'count' => $diary->likes()->count(),
-        ]);
+        ], 201);
     }
 
     /**
