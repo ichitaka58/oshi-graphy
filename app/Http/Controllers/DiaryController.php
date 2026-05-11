@@ -2,16 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreDiaryRequest;
+use App\Http\Requests\UpdateDiaryRequest;
 use App\Models\Diary;
-use App\Models\Artist;
-use App\Models\Comment;
 use App\Services\DiaryService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Carbon;
-use Throwable;
 
 
 class DiaryController extends Controller
@@ -54,36 +50,13 @@ class DiaryController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreDiaryRequest $request)
     {
-        $validated = $request->validate([
-            'happened_on' => 'required|date',
-            // exists:artists,id→存在しないartist_idが入らないようにする
-            'artist_id' => 'required|integer|exists:artists,id',
-            'body' => 'required|string',
-            'images' => 'nullable|array',
-            // images.*とすることで,複数ファイル（配列）をチェック可能
-            // image:画像かどうか、mimes:許可する拡張子、max:5120 5MB
-            'images.*' => 'image|mimes:jpeg,jpg,png,webp|max:5120',
-            'is_public' => 'boolean'
-        ]);
-
-        $diary = $request->user()->diaries()->create([
-            'happened_on' => $validated['happened_on'],
-            'artist_id' => $validated['artist_id'],
-            'body' => $validated['body'],
-            'is_public' => $validated['is_public'],
-        ]);
+        $diary = $this->diaryService->createDiary($request);
 
         if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $imageFile) {
-                $ext = strtolower($imageFile->getClientOriginalExtension());
-                $filename = $diary->id . '_' . now()->format('YmdHis') . '_' . uniqid() . '.' . $ext;
-                $path = $imageFile->storeAs('diary_images', $filename, 'public');
-                // storage/app/public/diary_imagesに保存
-                // storeは毎回ユニークなファイル名（ハッシュ由来+拡張子）を自動生成
-                $diary->images()->create(['path' => $path]);
-            }
+ 
+            $this->diaryService->attachImages($diary, $request->file('images'));
         }
         return redirect()
             ->route('diaries.index')
@@ -98,27 +71,10 @@ class DiaryController extends Controller
     {
         Gate::authorize('view', $diary);
 
-        $diary->load(['user'])
-            ->loadCount(['comments', 'likes'])
-            ->loadExists([
-                'likes as liked_by_me' => fn($q) => $q->where('user_id', auth()->id()),
-            ]);
-
-        // コメントをlikes_count / liked_by_me 付きで取得
-        // コメントへの返信を多層化：親コメントは新着順、返信コメントは古い順にソート
-        // 親を除く全ての返信数をカウント
-        $comments = Comment::query()
-            ->leftJoin('comments as r', 'r.id', '=', 'comments.root_id')
-            ->where('comments.diary_id', $diary->id)
-            ->orderByDesc('r.created_at')
-            ->orderBy('comments.path')
-            ->select('comments.*')
-            ->with('user')
-            ->withCount(['replies', 'likes'])
-            ->withExists([
-                'likes as liked_by_me' => fn($q) => $q->where('user_id', auth()->id()),
-            ])
-            ->get();
+        [
+            'diary' => $diary,
+            'comments' => $comments,
+        ] = $this->diaryService->showDiary($diary);
 
         return view('diaries.show', compact('diary', 'comments'));
     }
@@ -136,48 +92,17 @@ class DiaryController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Diary $diary)
+    public function update(UpdateDiaryRequest $request, Diary $diary)
     {
         Gate::authorize('update', $diary);
 
-        $validated = $request->validate([
-            'happened_on' => 'required|date',
-            // exists:artists,id→存在しないartist_idが入らないようにする
-            'artist_id' => 'required|integer|exists:artists,id',
-            'body' => 'required|string',
-            'images' => 'nullable|array',
-            'images.*' => 'image|mimes:jpeg,jpg,png,webp|max:5120',
-            'is_public' => 'boolean',
-            'delete_images' => 'nullable|array',
-            'delete_images.*' => 'integer|distinct|exists:diary_images,id',
-        ]);
+        $this->diaryService->updateDiary($request, $diary);
 
-        $diary->update([
-            'happened_on' => $validated['happened_on'],
-            'artist_id' => $validated['artist_id'],
-            'body' => $validated['body'],
-            'is_public' => $validated['is_public'],
-        ]);
-
-        // 画像の物理削除とDBの削除
-        $deleteIds = $request->input('delete_images', []);
-        if (!empty($deleteIds)) {
-            $images = $diary->images()->whereIn('id', $deleteIds)->get();
-            foreach ($images as $image) {
-                Storage::disk('public')->delete($image->path);
-                $image->delete();
-            }
-        }
+        $this->diaryService->deleteImages($request, $diary);
 
         if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $imageFile) {
-                $ext = strtolower($imageFile->getClientOriginalExtension());
-                $filename = $diary->id . '_' . now()->format('YmdHis') . '_' . uniqid() . '.' . $ext;
-                $path = $imageFile->storeAs('diary_images', $filename, 'public');
-                // storage/app/public/diary_imagesに保存
-                // storeは毎回ユニークなファイル名（ハッシュ由来+拡張子）を自動生成
-                $diary->images()->create(['path' => $path]);
-            }
+
+            $this->diaryService->attachImages($diary, $request->file('images'));
         }
 
         return redirect()
@@ -193,19 +118,8 @@ class DiaryController extends Controller
     {
         Gate::authorize('delete', $diary);
 
-        // 画像のパスだけを取り出す。all()は中身を素の配列に変換
-        $paths = $diary->images()->pluck('path')->all();
-        // 親を削除、画像はCASCADEで自動削除     
-        $diary->delete();
+        $this->diaryService->deleteDiary($diary);
 
-        try {
-            Storage::disk('public')->delete($paths); // ファイルの物理削除
-        } catch (Throwable $e) { // 何かしらのエラーが起きた時だけ実行、例外＆エラーを開発車向けに表示
-            Log::warning('Failed deleting diary image files', [
-                'paths' => $paths,
-                'error' => $e->getMessage(),
-            ]);
-        }
 
         return redirect()
             ->route('diaries.index')

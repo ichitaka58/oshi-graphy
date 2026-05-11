@@ -1,38 +1,42 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Models\Diary;
 use App\Services\DiaryLikeService;
 use Illuminate\Http\Request;
 
-
 class DiaryLikeController extends Controller
 {
+
     protected $diaryLikeService;
 
     public function __construct(DiaryLikeService $diaryLikeService)
     {
         $this->diaryLikeService = $diaryLikeService;
     }
-
     /**
-     * いいねしたユーザーの一覧を生成
+     * Display a listing of the resource.
      */
     public function index(Diary $diary)
     {
+
         $likers = $this->diaryLikeService->getLikers($diary);
 
-        return view('diaries.likes.index', compact('diary', 'likers'));
+        return response()->json([
+            'diary' => $diary,
+            'likers' => $likers
+        ]);
     }
 
     /**
-     * いいね情報を保存、通知を作成
+     * Store a newly created resource in storage.
      */
     public function store(Request $request, Diary $diary)
     {
-        $this->diaryLikeService->likeDiary($request, $diary);
 
+        $this->diaryLikeService->likeDiary($request, $diary);
 
         return response()->json([
             'ok' => true,
@@ -41,10 +45,12 @@ class DiaryLikeController extends Controller
         ]);
     }
 
-
-
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy(Request $request, Diary $diary)
     {
+
         $this->diaryLikeService->unlikeDiary($request, $diary);
 
         return response()->json([

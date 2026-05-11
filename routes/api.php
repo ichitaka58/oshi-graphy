@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DiaryController;
+use App\Http\Controllers\Api\DiaryLikeController;
 use App\Http\Controllers\Api\DiaryPublicController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -16,8 +17,12 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('diaries', DiaryController::class);
-    Route::get('public-diaries', [DiaryPublicController::class, 'index']);
-    Route::get('public-diaries/{diary}', [DiaryPublicController::class, 'show']);
-    Route::get('public-diaries/users/{user}', [DiaryPublicController::class, 'user']);
+    Route::get('/public-diaries', [DiaryPublicController::class, 'index']);
+    Route::get('/public-diaries/{diary}', [DiaryPublicController::class, 'show']);
+    Route::get('/public-diaries/users/{user}', [DiaryPublicController::class, 'user']);
+
+    Route::get('/diaries/{diary}/likes', [DiaryLikeController::class, 'index']);
+    Route::post('/diaries/{diary}/like', [DiaryLikeController::class, 'store']);
+    Route::delete('/diaries/{diary}/like', [DiaryLikeController::class, 'destroy']);
 });
 
