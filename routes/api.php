@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\DiaryController;
 use App\Http\Controllers\Api\DiaryLikeController;
 use App\Http\Controllers\Api\DiaryPublicController;
@@ -24,5 +25,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/diaries/{diary}/likes', [DiaryLikeController::class, 'index']);
     Route::post('/diaries/{diary}/like', [DiaryLikeController::class, 'store']);
     Route::delete('/diaries/{diary}/like', [DiaryLikeController::class, 'destroy']);
+
+    Route::post('/diaries/{diary}/comments', [CommentController::class, 'store'])->middleware('throttle:20,1'); // 簡易スパム対策（1分20件）
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
+    Route::post('/diaries/{diary}/comments/reply', [CommentController::class, 'reply'])->middleware('throttle:20,1'); // 簡易スパム対策（1分20件）
+    Route::delete('/replies/{comment}', [CommentController::class, 'destroy']);
 });
 
