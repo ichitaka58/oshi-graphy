@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommentController;
+use App\Http\Controllers\Api\CommentLikeController;
 use App\Http\Controllers\Api\DiaryController;
 use App\Http\Controllers\Api\DiaryLikeController;
 use App\Http\Controllers\Api\DiaryPublicController;
@@ -30,5 +31,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
     Route::post('/diaries/{diary}/comments/reply', [CommentController::class, 'reply'])->middleware('throttle:20,1'); // 簡易スパム対策（1分20件）
     Route::delete('/replies/{comment}', [CommentController::class, 'destroy']);
+
+    Route::post('/comments/{comment}/like', [CommentLikeController::class, 'store']);
+    Route::delete('/comments/{comment}/like', [CommentLikeController::class, 'destroy']);
+    Route::get('/comments/{comment}/likes', [CommentLikeController::class, 'CommentLikers']);
+
 });
 
