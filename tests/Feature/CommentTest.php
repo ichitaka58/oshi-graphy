@@ -41,7 +41,6 @@ it('非公開日記に他人はコメントできない', function() {
 
 it('本人のみが見られる日記詳細画面でコメント一覧が表示される', function() {
     $diary = Diary::factory()->for($this->owner)->for($this->artist)->create(['is_public' => true]);
-    // $viewer = User::factory()->create();
 
     $comment = Comment::factory()->for($diary)->for($this->user)->create();
 
@@ -83,4 +82,27 @@ it('他人のコメントは削除できない', function() {
     $this->assertDatabaseHas('comments', ['id' => $comment->id,]);
 });
 
+it('コメントに返信投稿ができる', function () {
+    $diary = Diary::factory()->for($this->owner)->for($this->artist)->create(['is_public' => true]);
+
+    $comment = Comment::factory()->for($diary)->for($this->user)->create();
+
+    $payload = [
+        'body' => 'テストリプライコメント',
+        'parent_id' => $comment->id,
+    ];
+    $response = $this->actingAs($this->owner)->post(route('comments.reply', $diary), $payload);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('status', '返信を投稿しました');
+
+    $this->assertDatabaseHas('comments', [
+        'user_id' => $this->owner->id,
+        'diary_id' => $diary->id,
+        'body' => 'テストリプライコメント',
+        'parent_id' => $comment->id,
+        'depth' => 1,
+        'root_id' => $comment->id,
+    ]);
+});
 
