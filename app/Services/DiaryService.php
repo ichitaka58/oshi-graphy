@@ -92,7 +92,7 @@ class DiaryService
 
     public function showDiary(Diary $diary)
     {
-        $diary->load(['user', 'artist'])
+        $diary->load(['user', 'artist', 'images'])
             ->loadCount(['comments', 'likes'])
             ->loadExists([
                 'likes as liked_by_me' => fn($q) => $q->where('user_id', auth()->id()),
