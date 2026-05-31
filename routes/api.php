@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ArtistController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\CommentLikeController;
@@ -35,6 +36,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/comments/{comment}/like', [CommentLikeController::class, 'store']);
     Route::delete('/comments/{comment}/like', [CommentLikeController::class, 'destroy']);
     Route::get('/comments/{comment}/likes', [CommentLikeController::class, 'CommentLikers']);
+
+    Route::get('/artists/search', [ArtistController::class, 'search']);
 
 });
 
