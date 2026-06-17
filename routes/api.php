@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CommentLikeController;
 use App\Http\Controllers\Api\DiaryController;
 use App\Http\Controllers\Api\DiaryLikeController;
 use App\Http\Controllers\Api\DiaryPublicController;
+use App\Http\Controllers\Api\UserProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/comments/{comment}/likes', [CommentLikeController::class, 'CommentLikers']);
 
     Route::get('/artists/search', [ArtistController::class, 'search']);
+
+    // whereNumber: 数字に限定する、それ以外はルーティング層で404にできる。
+    Route::get('/users/{user}', [UserProfileController::class, 'show'])->whereNumber('user');
 
 });
 
