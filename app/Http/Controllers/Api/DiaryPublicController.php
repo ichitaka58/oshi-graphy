@@ -65,7 +65,7 @@ class DiaryPublicController extends Controller
             abort(403);
         }
 
-        $diary->load(['user'])
+        $diary->load(['user', 'artist', 'images'])
             ->loadCount(['likes', 'comments'])
             ->loadExists(['likes as liked_by_me' => fn($q) => $q->where('user_id', auth()->id())]);
 
