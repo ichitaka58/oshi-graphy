@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -16,7 +15,10 @@ class GeminiClient
         //
     }
 
-    public function generate(array $history, string $userPrompt): string
+    // Gemini APIのエンドポイント
+    private const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/interactions';
+
+    public function generate(?string $previousInteractionId, string $userPrompt): array
     {
         //  AIに渡す最初のルール文
         $system = <<<TXT
@@ -37,50 +39,37 @@ class GeminiClient
         - 情報が不足して文案が作れない場合のみ、必要な要素を一つだけ質問してください。
         TXT;
 
-        // 過去の会話履歴を追加
-        $contents = [];
-        foreach ($history as $turn) {
-            $contents[] = [
-                'role' => $turn['role'] === 'model' ? 'model' : 'user',
-                'parts' => [['text' => $turn['text']]],
-            ];
-        }
-        //  今回ユーザーが入力した内容を追加
-        $contents[] = ['role' => 'user', 'parts' => [['text' => $userPrompt]]];
-
-        //  Gemini API の呼び出し先URLを作成
-        $endpoint = "https://generativelanguage.googleapis.com/v1beta/models/"
-            . config('services.gemini.model') . ":generateContent";
-
-        //  Geminiに送るデータ
+        // Geminiに送るデータ
         $payload = [
-            'systemInstruction' => [
-                'parts' => [['text' => $system]],
-            ],
-            'contents' => $contents,
+            'model' => config('services.gemini.model'),
+            'system_instruction' => $system,
+            'input' => $userPrompt,
             'tools' => [
-                [
-                    'google_search' => new \stdClass()
-                ]
+                ['type' => 'google_search'],
             ],
-            'generationConfig' => [
+            'generation_config' => [
                 'temperature' => 0.7,
-                'maxOutputTokens' => 2048,
-                'topP' => 0.9,
-                'topK' => 40,
+                'max_output_tokens' => 2048,
+                'top_p' => 0.9,
             ],
         ];
+
+        // 会話のidを'previous_interaction_id'に入れることで、会話の履歴を追う
+        if ($previousInteractionId !== null) {
+            $payload['previous_interaction_id'] = $previousInteractionId;
+        }
+
+
         //  APIを呼び出す（45秒でタイムアウト）
         $res = Http::withHeaders([
             'x-goog-api-key' => config('services.gemini.api_key'),
-            ])
+        ])
             ->connectTimeout(5)
             ->timeout(45)
             ->retry(2, 800, throw: false)
-            ->post($endpoint, $payload);
+            ->post(self::ENDPOINT, $payload); // $thisではなくselfを使う
 
-
-        //  失敗したらログに残してエラーにする
+        // 失敗したらログに残してエラーにする
         if (!$res->successful()) {
             Log::warning('Gemini API error', [
                 'status' => $res->status(),
@@ -91,23 +80,25 @@ class GeminiClient
 
         //  成功したらレスポンスのJSONを取り出す
         $data = $res->json();
+        // 会話のidを取り出す
+        $interactionId = data_get($data, 'id');
 
-        $text = '';
-
-        // data_get:ネストされた配列やオブジェクトからパーツ配列を取得、存在しない場合、空配列を返す
-        $parts = data_get($data, 'candidates.0.content.parts', []);
-
-        $text = collect($parts) // 配列をコレクションに変換
+        // data_get:ネストされた配列やオブジェクトからstepsの配列を取得、存在しない場合、空配列を返す
+        $text = collect(data_get($data, 'steps', [])) // 配列をコレクションに変換
+            ->where('type', 'model_output')
+            ->flatMap(fn($step) => data_get($step, 'content', []))
+            ->where('type', 'text')
             ->pluck('text') // 各パーツから'text'キーの値だけを取り出す
             ->implode(''); // それらを空文字で連結する
 
         // blank():nullも空文字もfalseも全部チェック
-        if(blank($text)) {
+        if (blank($text)) {
             // なぜ空だったのかをログに残す
             Log::error('Gemini API Error: Text is empty', ['response_data' => $data]);
             throw new \RuntimeException('AIから有効なテキストが返りません');
         }
 
-        return $text;
+
+        return ['text' => $text, 'interaction_id' => $interactionId];
     }
 }
