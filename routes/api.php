@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AiDiaryController;
 use App\Http\Controllers\Api\ArtistController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommentController;
@@ -42,6 +43,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // whereNumber: 数字に限定する、それ以外はルーティング層で404にできる。
     Route::get('/users/{user}', [UserProfileController::class, 'show'])->whereNumber('user');
+    Route::PUT('/user_profile', [UserProfileController::class, 'update']);
+
+    Route::post('/ai/diary-suggest', [AiDiaryController::class, 'suggest']);
+    Route::post('/ai/diary-reset', [AiDiaryController::class, 'reset']);
 
 });
 
