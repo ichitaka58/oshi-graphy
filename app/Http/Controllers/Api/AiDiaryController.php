@@ -12,8 +12,8 @@ class AiDiaryController extends Controller
     public function suggest(Request $request, GeminiClient $gemini)
     {
         $data = $request->validate([
-            'prompt' => 'required|string|max:2000',
-            'interaction_id' => 'nullable|string'
+            'interaction_id' => 'nullable|string',
+            'prompt' => 'required|string|max:2000'
         ]);
 
         try {
@@ -24,7 +24,6 @@ class AiDiaryController extends Controller
                 'reply' => $result['text'],
                 'interaction_id' => $result['interaction_id']
             ], 200);
-
         } catch (\Throwable $e) {
             Log::warning('AI suggest failed', ['error' => $e->getMessage()]);
             return response()->json([
