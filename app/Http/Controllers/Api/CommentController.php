@@ -18,7 +18,7 @@ class CommentController extends Controller
             return abort(403);
         }
 
-        $validated = $request->validateWithBag('comment', [
+        $validated = $request->validate([
             'body' => ['required', 'string', 'max:2000'],
         ]);
 
@@ -42,7 +42,7 @@ class CommentController extends Controller
             return abort(403);
         }
 
-        $validated = $request->validateWithBag('reply', [
+        $validated = $request->validate([
             'body' => ['required', 'string', 'max:2000'],
             // exists:comments,id コメントテーブルのidに存在する
             'parent_id' => ['required', 'integer', 'exists:comments,id'],
