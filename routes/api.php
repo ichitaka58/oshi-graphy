@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\CommentLikeController;
 use App\Http\Controllers\Api\DiaryController;
 use App\Http\Controllers\Api\DiaryLikeController;
 use App\Http\Controllers\Api\DiaryPublicController;
+use App\Http\Controllers\Api\PasswordController;
+use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\UserProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -48,5 +50,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/ai/diary-suggest', [AiDiaryController::class, 'suggest']);
     Route::post('/ai/diary-reset', [AiDiaryController::class, 'reset']);
 
+    // アカウント設定
+    Route::patch('/profile', [ProfileController::class, 'update']);
+    Route::delete('/profile', [ProfileController::class, 'destroy']);
+    Route::put('/password', [PasswordController::class, 'update']);
 });
 
