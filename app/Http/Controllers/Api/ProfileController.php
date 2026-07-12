@@ -11,6 +11,7 @@ class ProfileController extends Controller
 {
     /**
      * Update the user's profile information(email).
+     * メールアドレスの更新
      */
     public function update(Request $request)
     {
@@ -46,6 +47,9 @@ class ProfileController extends Controller
         ]);
     }
 
+    /**
+     * アカウントの削除
+     */
     public function destroy(Request $request)
     {
         $request->validate([
