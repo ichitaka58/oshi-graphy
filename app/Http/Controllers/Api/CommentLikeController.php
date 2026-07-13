@@ -10,6 +10,8 @@ class CommentLikeController extends Controller
 {
     public function store(Request $request, Comment $comment)
     {
+        abort_unless($comment->isVisibleTo($request->user()), 403);
+
         $like = $comment->likes()->firstOrCreate([
             'user_id' => $request->user()->id,
         ]);
@@ -23,6 +25,8 @@ class CommentLikeController extends Controller
 
     public function destroy(Request $request, Comment $comment)
     {
+        abort_unless($comment->isVisibleTo($request->user()), 403);
+
         $like = $comment->likes()->where('user_id', $request->user()->id)->first();
         if ($like) {
             $like->delete();
