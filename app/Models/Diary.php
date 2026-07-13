@@ -57,6 +57,24 @@ class Diary extends Model
         return $this->likes()->where('user_id', $user->id)->exists();
     }
 
+    /**
+     * 公開日記として、そのユーザーに閲覧・いいねを許可してよいか？
+     * （非公開日記、または投稿者にブロックされている場合はfalse）
+     */
+    public function isVisibleTo(User $user): bool
+    {
+        return $this->is_public && !$this->user->isBlocking($user);
+    }
+
+    /**
+     * 自分の日記、または閲覧を許可された公開日記か？
+     * （コメント投稿など、非公開でも投稿者本人には許可したい操作向け）
+     */
+    public function isVisibleOrOwnedBy(User $user): bool
+    {
+        return $this->user_id === $user->id || $this->isVisibleTo($user);
+    }
+
     public function likers()
     {
         return $this->morphToMany(User::class,  'likeable', 'likes', 'likeable_id', 'user_id')

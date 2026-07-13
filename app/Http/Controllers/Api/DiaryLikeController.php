@@ -35,6 +35,7 @@ class DiaryLikeController extends Controller
      */
     public function store(Request $request, Diary $diary)
     {
+        abort_unless($diary->isVisibleTo($request->user()), 403);
 
         $this->diaryLikeService->likeDiary($request, $diary);
 
@@ -50,6 +51,7 @@ class DiaryLikeController extends Controller
      */
     public function destroy(Request $request, Diary $diary)
     {
+        abort_unless($diary->isVisibleTo($request->user()), 403);
 
         $this->diaryLikeService->unlikeDiary($request, $diary);
 
