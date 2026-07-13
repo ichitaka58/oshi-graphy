@@ -14,9 +14,7 @@ class CommentController extends Controller
     {
         Gate::authorize('create', Comment::class);
 
-        if (!$diary->is_public && auth()->id() !== $diary->user_id) {
-            return abort(403);
-        }
+        abort_unless($diary->isVisibleOrOwnedBy($request->user()), 403);
 
         $validated = $request->validate([
             'body' => ['required', 'string', 'max:2000'],
@@ -38,9 +36,7 @@ class CommentController extends Controller
     {
         Gate::authorize('reply', Comment::class);
 
-        if (!$diary->is_public && auth()->id() !== $diary->user_id) {
-            return abort(403);
-        }
+        abort_unless($diary->isVisibleOrOwnedBy($request->user()), 403);
 
         $validated = $request->validate([
             'body' => ['required', 'string', 'max:2000'],
