@@ -95,12 +95,22 @@ class Diary extends Model
     protected static function booted(): void
     {
         // 日記削除の直前に、関連画像をストレージから削除する
-        static::deleting(function(Diary $diary) {
+        static::deleting(function (Diary $diary) {
             // 画像テーブルからファイルパスをまとめて取り出す。
             $paths = $diary->images()->pluck('path')->filter()->values()->all();
             // 見つかったファイルを物理削除（publicディスク想定）
-            if(!empty($paths)) {
+            if (!empty($paths)) {
                 Storage::disk('public')->delete($paths);
+            }
+            // 日記自体へのいいねを削除
+            $diary->likes()->delete();
+
+            // この日記に属するコメントへのいいねも削除
+            $commentIds = $diary->comments()->pluck('id');
+            if ($commentIds->isNotEmpty()) {
+                Like::where('likeable_type', Comment::class)
+                    ->whereIn('likeable_id', $commentIds)
+                    ->delete();
             }
         });
     }
