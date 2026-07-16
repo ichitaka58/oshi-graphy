@@ -19,9 +19,10 @@ class DiaryLikeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Diary $diary)
+    public function index(Request $request, Diary $diary)
     {
-
+        // 日記オーナーとログインユーザーが同じでなければ、403を返す
+        // abort_unless($diary->user_id === $request->user()->id, 403);
         $likers = $this->diaryLikeService->getLikers($diary);
 
         return response()->json([
@@ -35,6 +36,7 @@ class DiaryLikeController extends Controller
      */
     public function store(Request $request, Diary $diary)
     {
+        // 公開日記としてそのユーザーにいいねを許可されていなければ403を投げる
         abort_unless($diary->isVisibleTo($request->user()), 403);
 
         $this->diaryLikeService->likeDiary($request, $diary);
