@@ -39,8 +39,11 @@ class CommentLikeController extends Controller
         ]);
     }
 
-    public function commentLikers(Comment $comment)
+    public function commentLikers(Request $request, Comment $comment)
     {
+        // コメントオーナーとログインユーザーが別なら403を返す
+        // コメントオーナーしかいいねしたユーザーを見られない
+        abort_unless($comment->user_id === $request->user()->id, 403);
         $likers = $comment->likers()
             ->orderByPivot('created_at', 'desc')
             ->paginate(10)
@@ -48,7 +51,6 @@ class CommentLikeController extends Controller
 
         $comment->load('diary.user');
 
-        // return view('comments.likes.index', compact('comment', 'likers'));
         return response()->json([
             'comment' => $comment,
             'likers' => $likers,

@@ -22,7 +22,7 @@ class DiaryLikeController extends Controller
     public function index(Request $request, Diary $diary)
     {
         // 日記オーナーとログインユーザーが同じでなければ、403を返す
-        // abort_unless($diary->user_id === $request->user()->id, 403);
+        abort_unless($diary->user_id === $request->user()->id, 403);
         $likers = $this->diaryLikeService->getLikers($diary);
 
         return response()->json([
