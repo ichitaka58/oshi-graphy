@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\CommentLikeController;
 use App\Http\Controllers\Api\DiaryController;
 use App\Http\Controllers\Api\DiaryLikeController;
 use App\Http\Controllers\Api\DiaryPublicController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PasswordController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\UserProfileController;
@@ -54,5 +55,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update']);
     Route::delete('/profile', [ProfileController::class, 'destroy']);
     Route::put('/password', [PasswordController::class, 'update']);
+});
+
+Route::prefix('notifications')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [NotificationController::class, 'index']);
+    Route::post('/mark-all-read', [NotificationController::class, 'markAllRead']);
+    Route::post('/{id}/read', [NotificationController::class, 'markRead']);
+    Route::delete('/{id}', [NotificationController::class, 'destroy']);
+    Route::get('/unread-Count', [NotificationController::class, 'unreadCount']);
 });
 
