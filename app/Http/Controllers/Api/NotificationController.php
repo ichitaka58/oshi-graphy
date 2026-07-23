@@ -12,7 +12,6 @@ class NotificationController extends Controller
         $notifications = $request->user()->notifications()
             ->latest()->paginate(20);
 
-        // return view('notifications.index', compact('notifications'));
         return response()->json([
             'notifications' => $notifications,
         ]);
@@ -35,7 +34,6 @@ class NotificationController extends Controller
         if (is_null($n->read_at)) $n->markAsRead();
         // 未読ならmarkAsRead()->read_atに現在時刻が入る。
 
-        // return back();
         return response()->json([
             'ok' => true,
         ]);
@@ -47,7 +45,6 @@ class NotificationController extends Controller
         $request->user()->unreadNotifications()
             ->update(['read_at' => now()]);
 
-        // return back();
         return response()->json([
             'ok' => true,
         ]);
@@ -59,7 +56,17 @@ class NotificationController extends Controller
         $n = $request->user()->notifications()->findOrFail($id);
         $n->delete();
 
-        // return back();
+        return response()->json([
+            'ok' => true,
+        ]);
+    }
+
+    // 既読通知を未読に戻す
+    public function markUnread(Request $request, string $id)
+    {
+        $n = $request->user()->notifications()->findOrFail($id);
+        $n->update(['read_at' => null]);
+
         return response()->json([
             'ok' => true,
         ]);
