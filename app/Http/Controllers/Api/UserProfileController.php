@@ -15,14 +15,19 @@ class UserProfileController extends Controller
     /**
      * Display the user's profile information.
      */
-    public function show(User $user)
+    public function show(Request $request, User $user)
     {
         Gate::authorize('view', $user);
         $user->loadCount([
-            'diaries as public_diaries_count' => fn($q) => $q->where('is_public', true)
+            'diaries as public_diaries_count' => fn($q) => $q->where('is_public', true),
+            'followings',
+            'followers'
         ]);
+        $isFollowing = $request->user()->isFollowing($user);
+
         return response()->json([
             'user' => $user,
+            'is_following' => $isFollowing,
         ]);
     }
 
