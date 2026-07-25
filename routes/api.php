@@ -11,6 +11,8 @@ use App\Http\Controllers\Api\DiaryPublicController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PasswordController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\UserBlockController;
+use App\Http\Controllers\Api\UserFollowController;
 use App\Http\Controllers\Api\UserProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -55,6 +57,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update']);
     Route::delete('/profile', [ProfileController::class, 'destroy']);
     Route::put('/password', [PasswordController::class, 'update']);
+
+    Route::post('/users/{user}/follow', [UserFollowController::class, 'store']);
+    Route::delete('/users/{user}/follow', [UserFollowController::class, 'destroy']);
+    Route::get('/user-follow/followers', [UserFollowController::class, 'followers']);
+    Route::get('/user-follow/followings', [UserFollowController::class, 'followings']);
+
+    Route::post('/users/{user}/block', [UserBlockController::class, 'store']);
+    Route::delete('/users/{user}/block', [UserBlockController::class, 'destroy']);
+    Route::get('/user-block/blocks', [UserBlockController::class, 'blocks']);
+    // Route::delete('/blocks/bulk-destroy', [UserBlockController::class, 'bulkDestroy'])->name('blocks.bulk-destroy');
 });
 
 Route::prefix('notifications')->middleware('auth:sanctum')->group(function () {
