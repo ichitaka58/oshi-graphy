@@ -60,20 +60,26 @@ class UserFollowController extends Controller
         ]);
     }
 
-    public function followers(Request $request)
+    /**
+     * $userのフォロワー一覧をページネーションで取得
+     */
+    public function followers(User $user)
     {
-        $followers = $request->user()->followers()
-            ->orderByPivot('created_at', 'desc')->paginate(20)->withQueryString();
+        $followers = $user->followers()
+            ->orderByPivot('created_at', 'desc')->paginate(10)->withQueryString();
 
         return response()->json([
             'followers' => $followers,
         ]);
     }
 
-    public function followings(Request $request)
+    /**
+     * $userがフォローしている人の一覧をページネーションで取得
+     */
+    public function followings(User $user)
     {
-        $followings = $request->user()->followings()
-            ->orderByPivot('created_at', 'desc')->paginate(20)->withQueryString();
+        $followings = $user->followings()
+            ->orderByPivot('created_at', 'desc')->paginate(10)->withQueryString();
 
         return response()->json([
             'followings' => $followings,
