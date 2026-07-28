@@ -65,7 +65,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/users/{user}/block', [UserBlockController::class, 'store']);
     Route::delete('/users/{user}/block', [UserBlockController::class, 'destroy']);
-    Route::get('/user-block/blocks', [UserBlockController::class, 'blocks']);
+    Route::get('/users/user-blocks', [UserBlockController::class, 'blocks']);
     // Route::delete('/blocks/bulk-destroy', [UserBlockController::class, 'bulkDestroy'])->name('blocks.bulk-destroy');
 });
 
