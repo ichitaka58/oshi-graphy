@@ -24,10 +24,12 @@ class UserProfileController extends Controller
             'followers'
         ]);
         $isFollowing = $request->user()->isFollowing($user);
+        $isBlocking = $request->user()->isBlocking($user);
 
         return response()->json([
             'user' => $user,
             'is_following' => $isFollowing,
+            'is_blocking' => $isBlocking,
         ]);
     }
 
