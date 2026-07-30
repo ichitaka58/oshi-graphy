@@ -78,3 +78,8 @@ Route::prefix('notifications')->middleware('auth:sanctum')->group(function () {
     Route::post('/{id}/mark-unread', [NotificationController::class, 'markUnread']);
 });
 
+Route::middleware(['auth:sanctum', 'can:access-admin'])->prefix('admin')->group(function () {
+    Route::apiResource('artists', ArtistController::class)->except(['show']);
+    // 他に管理者限定のものがあればここへ
+});
+
