@@ -79,7 +79,7 @@ Route::prefix('notifications')->middleware('auth:sanctum')->group(function () {
 });
 
 Route::middleware(['auth:sanctum', 'can:access-admin'])->prefix('admin')->group(function () {
-    Route::apiResource('artists', ArtistController::class)->except(['show']);
+    Route::apiResource('artists', ArtistController::class);
     // 他に管理者限定のものがあればここへ
 });
 
