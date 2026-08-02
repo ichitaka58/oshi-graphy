@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('comments', function (Blueprint $table) {
+            // 親コメントが削除されたらそれを参照しているレコード(返信)も自動的に削除する
             $table->foreignId('parent_id')->nullable()->constrained('comments')->cascadeOnDelete();
         });
     }

@@ -57,6 +57,24 @@ class Diary extends Model
         return $this->likes()->where('user_id', $user->id)->exists();
     }
 
+    /**
+     * 公開日記として、そのユーザーに閲覧・いいねを許可してよいか？
+     * （非公開日記、または投稿者にブロックされている場合はfalse）
+     */
+    public function isVisibleTo(User $user): bool
+    {
+        return $this->is_public && !$this->user->isBlocking($user);
+    }
+
+    /**
+     * 自分の日記、または閲覧を許可された公開日記か？
+     * （コメント投稿など、非公開でも投稿者本人には許可したい操作向け）
+     */
+    public function isVisibleOrOwnedBy(User $user): bool
+    {
+        return $this->user_id === $user->id || $this->isVisibleTo($user);
+    }
+
     public function likers()
     {
         return $this->morphToMany(User::class,  'likeable', 'likes', 'likeable_id', 'user_id')
@@ -77,12 +95,22 @@ class Diary extends Model
     protected static function booted(): void
     {
         // 日記削除の直前に、関連画像をストレージから削除する
-        static::deleting(function(Diary $diary) {
+        static::deleting(function (Diary $diary) {
             // 画像テーブルからファイルパスをまとめて取り出す。
             $paths = $diary->images()->pluck('path')->filter()->values()->all();
             // 見つかったファイルを物理削除（publicディスク想定）
-            if(!empty($paths)) {
+            if (!empty($paths)) {
                 Storage::disk('public')->delete($paths);
+            }
+            // 日記自体へのいいねを削除
+            $diary->likes()->delete();
+
+            // この日記に属するコメントへのいいねも削除
+            $commentIds = $diary->comments()->pluck('id');
+            if ($commentIds->isNotEmpty()) {
+                Like::where('likeable_type', Comment::class)
+                    ->whereIn('likeable_id', $commentIds)
+                    ->delete();
             }
         });
     }

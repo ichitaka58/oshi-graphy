@@ -22,6 +22,15 @@ class Comment extends Model
         return $this->belongsTo(Diary::class);
     }
 
+    /**
+     * このコメントを、そのユーザーに閲覧・いいねを許可してよいか？
+     * （紐づく日記が閲覧可能かどうかで判定）
+     */
+    public function isVisibleTo(User $user): bool
+    {
+        return $this->diary->isVisibleOrOwnedBy($user);
+    }
+
     public function likes()
     {
         return $this->morphMany(Like::class, 'likeable');

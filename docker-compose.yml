@@ -1,6 +1,7 @@
 services:
     phpmyadmin:
         image: phpmyadmin/phpmyadmin
+        platform: linux/amd64
         links:
             - mysql:mysql
         ports:
@@ -11,6 +12,8 @@ services:
             PMA_HOST: mysql
         networks:
             - sail
+        depends_on:
+            - mysql
     laravel.test:
         build:
             context: './vendor/laravel/sail/runtimes/8.4'

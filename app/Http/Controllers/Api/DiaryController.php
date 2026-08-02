@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDiaryRequest;
 use App\Http\Requests\UpdateDiaryRequest;
 use App\Models\Diary;
 use App\Services\DiaryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-
 
 class DiaryController extends Controller
 {
@@ -34,17 +34,15 @@ class DiaryController extends Controller
             'artists' => $artists,
             'year' => $year,
             'artist' => $artist,
-        ]  = $this->diaryService->allDiaries($request);
+        ] = $this->diaryService->allDiaries($request);
 
-        return view('diaries.index', compact('diaries', 'years', 'artists', 'year', 'artist'));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return view('diaries.create');
+        return response()->json([
+            'diaries' => $diaries,
+            'years' => $years,
+            'artists' => $artists,
+            'year' => $year,
+            'artist' => $artist,
+        ]);
     }
 
     /**
@@ -52,16 +50,16 @@ class DiaryController extends Controller
      */
     public function store(StoreDiaryRequest $request)
     {
+
         $diary = $this->diaryService->createDiary($request);
 
         if ($request->hasFile('images')) {
- 
             $this->diaryService->attachImages($diary, $request->file('images'));
         }
-        return redirect()
-            ->route('diaries.index')
-            ->with('status', '日記を保存しました')->with('status_type', 'success');
-        // セッションに一時的なデータ（フラッシュデータ）を保存するメソッド
+
+        return response()->json([
+            'diary' => $diary,
+        ], 201);
     }
 
     /**
@@ -76,17 +74,10 @@ class DiaryController extends Controller
             'comments' => $comments,
         ] = $this->diaryService->showDiary($diary);
 
-        return view('diaries.show', compact('diary', 'comments'));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Diary $diary)
-    {
-        Gate::authorize('update', $diary);
-
-        return view('diaries.edit', compact('diary'));
+        return response()->json([
+            'diary' => $diary,
+            'comments' => $comments,
+        ]);
     }
 
     /**
@@ -105,10 +96,9 @@ class DiaryController extends Controller
             $this->diaryService->attachImages($diary, $request->file('images'));
         }
 
-        return redirect()
-            ->route('diaries.show', $diary)
-            ->with('status', '日記を更新しました')->with('status_type', 'success');
-        // セッションに一時的なデータ（フラッシュデータ）を保存するメソッド
+        return response()->json([
+            'diary' => $diary,
+        ]);
     }
 
     /**
@@ -120,10 +110,6 @@ class DiaryController extends Controller
 
         $this->diaryService->deleteDiary($diary);
 
-
-        return redirect()
-            ->route('diaries.index')
-            ->with('status', '日記を削除しました。')
-            ->with('status_type', 'success');
+        return response()->noContent(); // ボディなし
     }
 }

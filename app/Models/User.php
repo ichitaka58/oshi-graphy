@@ -7,12 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
-
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -123,6 +123,16 @@ class User extends Authenticatable
             if(!empty($user->icon_path)) {
                 Storage::disk('public')->delete($user->icon_path);
             }
+
+            // このユーザーが書いたコメント（他人の日記への分も含む）へのいいねを削除
+            // ※ comments.user_id は cascadeOnDelete のため、このユーザー削除時に
+            //   DBレベルで直接コメントが消える。DBのcascadeはEloquentイベントを
+            //   発火させないため、ここで先に手動で片付けておく必要がある。
+            $user->comments()->select('id')->chunkById(100, function($chunk) {
+                Like::where('likeable_type', Comment::class)
+                    ->whereIn('likeable_id', $chunk->pluck('id'))
+                    ->delete();
+            });
 
             // chunkById:ID順に100件ずつとりだして処理する関数
             $user->diaries()->select('id')->chunkById(100, function($chunk){

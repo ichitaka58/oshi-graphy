@@ -361,6 +361,7 @@ it('他人は更新できない（policy: update）', function(){
   $diary = Diary::factory()->for($owner)->for($artist)->create();
 
   $response = $this->actingAs($other)->put(route('diaries.update', $diary), [
+    'artist_id' => $artist->id,
     'happened_on' => '2025-01-25',
     'body' => '更新できない',
     'is_public' => false,
