@@ -51,7 +51,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::PUT('/user_profile', [UserProfileController::class, 'update']);
 
     Route::post('/ai/diary-suggest', [AiDiaryController::class, 'suggest']);
-    Route::post('/ai/diary-reset', [AiDiaryController::class, 'reset']);
 
     // アカウント設定
     Route::patch('/profile', [ProfileController::class, 'update']);
