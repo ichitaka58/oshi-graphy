@@ -104,7 +104,7 @@ class User extends Authenticatable
     public function getIconUrlAttribute(): string
     {
         return $this->icon_path
-            ? asset('storage/'.$this->icon_path)
+            ? Storage::disk(config('filesystems.media_disk'))->url($this->icon_path)
             : asset('images/icon_placeholder.png');
     }
 
@@ -121,7 +121,7 @@ class User extends Authenticatable
 
             // ユーザーアイコンの物理削除
             if(!empty($user->icon_path)) {
-                Storage::disk('public')->delete($user->icon_path);
+                Storage::disk(config('filesystems.media_disk'))->delete($user->icon_path);
             }
 
             // このユーザーが書いたコメント（他人の日記への分も含む）へのいいねを削除
