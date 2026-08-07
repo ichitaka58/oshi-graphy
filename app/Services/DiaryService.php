@@ -83,7 +83,7 @@ class DiaryService
             $ext = strtolower($imageFile->getClientOriginalExtension());
             // diary_id＋日時＋uniqidの組み合わせでファイル名の衝突を防ぐ
             $filename = $diary->id . '_' . now()->format('YmdHis') . '_' . uniqid() . '.' . $ext;
-            $path = $imageFile->storeAs('diary_images', $filename, 'public');
+            $path = $imageFile->storeAs('diary_images', $filename, config('filesystems.media_disk'));
             // storage/app/public/diary_imagesに保存
             // storeは毎回ユニークなファイル名（ハッシュ由来+拡張子）を自動生成
             $diary->images()->create(['path' => $path]);
@@ -141,7 +141,7 @@ class DiaryService
         if (!empty($deleteIds)) {
             $images = $diary->images()->whereIn('id', $deleteIds)->get();
             foreach ($images as $image) {
-                Storage::disk('public')->delete($image->path);
+                Storage::disk(config('filesystems.media_disk'))->delete($image->path);
                 $image->delete();
             }
         }
@@ -156,7 +156,7 @@ class DiaryService
         $diary->delete();
 
         try {
-            Storage::disk('public')->delete($paths); // ファイルの物理削除
+            Storage::disk(config('filesystems.media_disk'))->delete($paths); // ファイルの物理削除
         } catch (Throwable $e) { // 何かしらのエラーが起きた時だけ実行、例外＆エラーを開発者向けに表示
             Log::warning('Failed deleting diary image files', [
                 'paths' => $paths,

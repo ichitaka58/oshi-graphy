@@ -49,19 +49,19 @@ class UserProfileController extends Controller
 
         if ($deleteIcon) {
             if ($user->icon_path) {
-                Storage::disk('public')->delete($user->icon_path);
+                Storage::disk(config('filesystems.media_disk'))->delete($user->icon_path);
             }
             $user->icon_path = null;
         } elseif ($request->hasFile('icon')) {
             // 古いファイルを削除
             if ($user->icon_path) {
-                Storage::disk('public')->delete($user->icon_path);
+                Storage::disk(config('filesystems.media_disk'))->delete($user->icon_path);
             }
             // 新しいファイル名を生成
             $ext = strtolower($request->file('icon')->getClientOriginalExtension());
             $filename = $user->id . '_' . now()->format('YmdHis') . '.' . $ext;
             // 新しいファイルを保存
-            $path = $request->file('icon')->storeAs('profile_icons', $filename, 'public');
+            $path = $request->file('icon')->storeAs('profile_icons', $filename, config('filesystems.media_disk'));
             // DBにパスを保存
             $user->icon_path = $path;
         }

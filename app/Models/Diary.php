@@ -100,7 +100,7 @@ class Diary extends Model
             $paths = $diary->images()->pluck('path')->filter()->values()->all();
             // 見つかったファイルを物理削除（publicディスク想定）
             if (!empty($paths)) {
-                Storage::disk('public')->delete($paths);
+                Storage::disk(config('filesystems.media_disk'))->delete($paths);
             }
             // 日記自体へのいいねを削除
             $diary->likes()->delete();
