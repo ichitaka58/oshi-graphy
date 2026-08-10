@@ -1,15 +1,19 @@
-# Oshi-Graphy（推しグラフィー）
-
-![Oshi-Graphy](./docs/top_page.png)
+# Oshi-Graphy（推しグラフィー）バックエンド
 
 [![PHP](https://img.shields.io/badge/PHP_8.4-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://php.net/)
 [![Laravel](https://img.shields.io/badge/Laravel_12-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
+[![Sanctum](https://img.shields.io/badge/Laravel_Sanctum-FF2D20?style=for-the-badge)](https://laravel.com/docs/sanctum)
 [![MySQL](https://img.shields.io/badge/MySQL_8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
-[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Alpine.js](https://img.shields.io/badge/Alpine.js-8BC0D0?style=for-the-badge&logo=alpinedotjs&logoColor=white)](https://alpinejs.dev/)
 [![Pest](https://img.shields.io/badge/Pest-222222?style=for-the-badge&logo=pest&logoColor=white)](https://pestphp.com/)
 
-**【アプリ公開URL】:** [https://ichitaka58.sakura.ne.jp/oshi-graphy/](https://ichitaka58.sakura.ne.jp/oshi-graphy/)
+**【アプリ公開URL（フロントエンド）】:** [https://oshi-graphy.com](https://oshi-graphy.com)
+**【API Base URL（本リポジトリ）】:** `https://ichitaka58.sakura.ne.jp/oshi-graphy/`（配下の `/api/*` を参照）
+
+## 🔌 本リポジトリの役割
+
+本リポジトリは、Next.js製フロントエンド **[oshi-graphy-frontend](https://github.com/ichitaka58/oshi-graphy-frontend)** に対して REST API（`routes/api.php`、Laravel Sanctum によるトークン認証）を提供するバックエンドです。ユーザーが実際に触れる画面は oshi-graphy-frontend 側にあり、本リポジトリはデータの永続化・認証・ビジネスロジックを担当します。
+
+> **補足:** 本プロジェクトはもともと Blade + Alpine.js によるフルスタックのWebアプリとして開発したものです。フロントエンドを Next.js で作り直すにあたり、本リポジトリに Sanctum トークン認証ベースの REST API（`routes/api.php` 配下）を追加し、以降はそちらがフロントエンドから利用される現行の窓口になっています。移行時の経緯として、旧来の Blade ビュー（`routes/web.php`、セッション認証）もコード上は残っています。
 
 ## 📖 アプリの概要
 Oshi-Graphy（推しグラフィー）は、80〜90年代から今も活躍するアーティストの推し活を楽しむ**中高年世代を対象**にした推し活ダイアリー共有アプリです。
@@ -19,7 +23,7 @@ Oshi-Graphy（推しグラフィー）は、80〜90年代から今も活躍す�
 ### 💡 制作の背景・目的
 推し活の思い出を一つにまとめて残せる場として、また既存の推し活アプリは若年層向けが多く、同世代の同じアーティストのファンと落ち着いて交流できる場として、このアプリを開発しました。
 
-## ✨ 主な機能
+## ✨ 提供している機能（API）
 - **ダイアリー機能**
   - 公開／非公開設定
   - 画像添付
@@ -30,16 +34,26 @@ Oshi-Graphy（推しグラフィー）は、80〜90年代から今も活躍す�
 - **マイページ・ユーザー管理**
   - ユーザープロフィール（アイコン画像・自己紹介）
   - ブロック機能（ユーザー間の相互ブロック／ブロックユーザー一覧）
-- **通知・ダッシュボード機能**
-  - 既読管理、ベルアイコンでの未読数表示、通知リスト／詳細リンク
-  - ダッシュボード（通知一覧、クイックリンク）
+- **通知機能**
+  - 既読管理、未読数取得、通知一覧
   - 管理者向け：アーティスト情報管理（CRUD）
-- **AIアシスト機能 / 検索補助**
-  - Gemini API連携による日記下書き補助（AIアシスト）
-  - Select2 などを用いた検索UI補助
-- **UI / UX**
-  - レスポンシブデザイン
-  - ダークモード対応
+- **AIアシスト機能**
+  - Gemini API連携による日記下書き補助
+
+## 📡 主なAPIエンドポイント
+
+ベースパスは `/api`。ログイン・登録以外はすべて `auth:sanctum` ミドルウェアで保護されている。
+
+| グループ | 主なエンドポイント | 備考 |
+| --- | --- | --- |
+| 認証 | `POST /register`, `POST /login`, `POST /logout`, `GET /user` | ログイン成功時に `access_token` を返却（フロント側で httpOnly Cookie 化） |
+| 日記 | `GET/POST/PUT/DELETE /diaries`, `GET /public-diaries` | `apiResource` |
+| コメント・いいね | `POST /diaries/{diary}/comments`, `POST /diaries/{diary}/like`, `POST /comments/{comment}/like` | コメント投稿は `throttle:20,1` |
+| フォロー・ブロック | `POST /users/{user}/follow`, `POST /users/{user}/block` | 相互フォロー／相互ブロック |
+| 通知 | `GET /notifications`, `GET /notifications/unread-count`, `POST /notifications/mark-all-read` | |
+| アカウント | `PATCH /profile`, `PUT /password`, `PUT /user_profile` | |
+| AIアシスト | `POST /ai/diary-suggest` | Gemini API 連携 |
+| 管理者 | `/admin/artists`（`apiResource`） | `can:access-admin` を追加要求 |
 
 ## 🛠 技術スタック
 
@@ -48,21 +62,22 @@ Oshi-Graphy（推しグラフィー）は、80〜90年代から今も活躍す�
 - Laravel 12
 - MySQL 8
 
-### Frontend
-- Tailwind CSS / Alpine.js / Vite / Blade Components
-
 ### Auth / API
-- Laravel Breeze（JP ローカライズ）
+- Laravel Sanctum（トークン認証、フロントエンドAPI用）
+- Laravel Breeze（JP ローカライズ、旧Blade UIのセッション認証・レガシー）
 - Gemini API (Google Generative AI)
 
 ### Infrastructure / Environment
 - **ローカル開発環境**: Docker / Laravel Sail
 - **本番環境**: さくらレンタルサーバ (PHP 8.3)
+- **画像ストレージ**: Cloudflare R2（S3互換、`league/flysystem-aws-s3-v3`）／開発環境はローカルディスク
 - **CI/CD**: GitHub Actions
 
 ## 🚀 デプロイの仕組み
 GitHub Actionsにより、`main`ブランチへのpushをトリガーにして、さくらレンタルサーバへSSH接続し、**自動デプロイ**を実施しています。
 デプロイ時はLaravelのメンテナンスモードを使用し、依存関係の更新（composer）、マイグレーション、キャッシュクリアを自動化しています。
+
+フロントエンド（Next.js / Vercel）は別リポジトリ・別デプロイパイプラインで管理されており、本リポジトリのデプロイ対象はAPIサーバーのみです。
 
 ## 🖥 開発環境の構築（ローカル）
 
@@ -93,7 +108,18 @@ cp .env.example .env
 ./vendor/bin/sail npm run dev
 ```
 
-設定完了後、`http://localhost` にアクセスして動作を確認できます。
+設定完了後、`http://localhost` にアクセスして動作を確認できます（旧Blade UI）。実際の画面で動作確認したい場合は、`oshi-graphy-frontend` 側を本リポジトリの `http://localhost` を向くよう設定して起動してください。
+
+## 🖼 画像ストレージ
+
+日記画像・ユーザーアイコンの保存先は `config/filesystems.php` の `media_disk`（`MEDIA_DISK` 環境変数）で切り替わる。アプリケーションコードは `Storage::disk(config('filesystems.media_disk'))` 経由でアクセスするため、ディスクの実体を意識せず同じコードで両環境に対応する。
+
+| 環境 | `MEDIA_DISK` | 実体 |
+| --- | --- | --- |
+| ローカル開発 | `public`（未設定時のデフォルト） | `storage/app/public`（`php artisan storage:link` 後 `/storage/*` で配信） |
+| 本番 | `r2` | Cloudflare R2 バケット（`R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_BUCKET` / `R2_ENDPOINT` / `R2_URL` を `.env` に設定） |
+
+既存画像をローカル `public` ディスクから R2 へ移す場合は、`php artisan media:migrate-to-r2`（`--dry` でプレビュー可）を使用する。DBとの整合性は見ずディレクトリ配下を機械的にコピーする実装のため、実行前に対象ディスクの状態を確認すること。
 
 ## 🧪 テスト
 
