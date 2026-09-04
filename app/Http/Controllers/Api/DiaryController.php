@@ -50,6 +50,7 @@ class DiaryController extends Controller
      */
     public function store(StoreDiaryRequest $request)
     {
+        Gate::authorize('create', Diary::class);
 
         $diary = $this->diaryService->createDiary($request);
 
