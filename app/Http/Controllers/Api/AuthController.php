@@ -62,6 +62,9 @@ class AuthController extends Controller
         // attempt 成功時点でメールアドレスの存在は確定しているので firstOrFail で取得する
         $user = User::where('email', $request['email'])->firstOrFail();
 
+        // そのユーザーの既存のトークンを削除する
+        $user->tokens()->where('name', 'auth_token')->delete();
+        // 新しいトークンを発行
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -73,6 +76,7 @@ class AuthController extends Controller
     public function logout(Request $request) {
         // currentAccessToken() で現在のリクエストに使用されたトークンのみを削除する
         // user()->tokens()->delete() とは異なり、他デバイスのセッションには影響しない
+        // →今は同時に1セッションに変更
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
