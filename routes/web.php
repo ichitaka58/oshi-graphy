@@ -32,7 +32,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('diaries', DiaryController::class);
     Route::get('/public_diaries', [DiaryPublicController::class, 'index'])->name('public.diaries.index');
     Route::get('/public_diaries/{diary}', [DiaryPublicController::class, 'show'])->name('public.diaries.show');
-    Route::get('/public_diaries/users/{user}',[DiaryPublicController::class, 'user'])->name('public.diaries.user');
+    Route::get('/public_diaries/users/{user}',[DiaryPublicController::class, 'user'])->whereNumber('user')->name('public.diaries.user');
     Route::get('/artists/search',[ArtistController::class, 'search'])->name('artists.search');
 
     Route::post('/diaries/{diary}/comments', [CommentController::class, 'store'])->name('comments.store')
@@ -42,7 +42,7 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:20,1'); // 簡易スパム対策（1分20件）
     Route::delete('/replies/{comment}', [CommentController::class, 'destroy'])->name('replies.destroy');
 
-    Route::post('/ai/diary-suggest', [AiDiaryController::class, 'suggest'])->name('ai.diary.suggest');
+    Route::post('/ai/diary-suggest', [AiDiaryController::class, 'suggest'])->name('ai.diary.suggest')->middleware('throttle:10,1,ai-suggest');
     Route::post('/ai/diary-reset', [AiDiaryController::class, 'reset'])->name('ai.diary.reset');
 
     Route::post('/diaries/{diary}/like', [DiaryLikeController::class, 'store'])->name('diaries.like.store');
@@ -53,13 +53,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/comments/{comment}/like', [CommentLikeController::class, 'destroy'])->name('comments.like.destroy');
     Route::get('/comments/{comment}/likes', [CommentLikeController::class, 'commentLikers'])->name('comments.likes.index');
 
-    Route::post('/users/{user}/follow', [UserFollowController::class, 'store'])->name('users.follow.store');
-    Route::delete('/users/{user}/follow', [UserFollowController::class, 'destroy'])->name('users.follow.destroy');
+    Route::post('/users/{user}/follow', [UserFollowController::class, 'store'])->whereNumber('user')->name('users.follow.store');
+    Route::delete('/users/{user}/follow', [UserFollowController::class, 'destroy'])->whereNumber('user')->name('users.follow.destroy');
     Route::get('/user_follow/followers', [UserFollowController::class, 'followers'])->name('user.follow.followers');
     Route::get('/user_follow/followings', [UserFollowController::class, 'followings'])->name('user.follow.followings');
 
-    Route::post('/users/{user}/block', [UserBlockController::class, 'store'])->name('users.block.store');
-    Route::delete('/users/{user}/block', [UserBlockController::class, 'destroy'])->name('users.block.destroy');
+    Route::post('/users/{user}/block', [UserBlockController::class, 'store'])->whereNumber('user')->name('users.block.store');
+    Route::delete('/users/{user}/block', [UserBlockController::class, 'destroy'])->whereNumber('user')->name('users.block.destroy');
     Route::get('/user_block/blocks', [UserBlockController::class, 'blocks'])->name('user.block.blocks');
     Route::delete('/blocks/bulk-destroy', [UserBlockController::class, 'bulkDestroy'])->name('blocks.bulk-destroy');
 });
