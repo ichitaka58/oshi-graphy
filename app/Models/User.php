@@ -99,6 +99,13 @@ class User extends Authenticatable
         return $this->blocks()->whereKey($other->id)->exists();
     }
 
+    // 相互フォローしているか（DM機能   ）
+    public function isMutualFollowing(User $other): bool
+    {
+        return $this->isFollowing($other) && $other->isFollowing($this);
+    }
+
+
     protected $appends = ['icon_url'];
 
     public function getIconUrlAttribute(): string
