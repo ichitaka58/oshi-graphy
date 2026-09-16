@@ -25,11 +25,13 @@ class UserProfileController extends Controller
         ]);
         $isFollowing = $request->user()->isFollowing($user);
         $isBlocking = $request->user()->isBlocking($user);
+        $isFollowedBy = $user->isFollowing($request->user());
 
         return response()->json([
             'user' => $user,
             'is_following' => $isFollowing,
             'is_blocking' => $isBlocking,
+            'is_followed_by' => $isFollowedBy,
         ]);
     }
 

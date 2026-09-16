@@ -59,4 +59,14 @@ class UserPolicy
         if ($currentUser->id === $targetUser->id) return false;
         return $currentUser->isBlocking($targetUser);
     }
+
+    /**
+     * DMを送って良いか？（＝相互フォロー中か、ブロックされていないか？）
+     */
+    public function message(User $currentUser, User $targetUser): bool
+    {
+        if ($currentUser->id === $targetUser->id) return false;
+        if ($currentUser->isBlocking($targetUser) || $targetUser->isBlocking($currentUser)) return false;
+        return $currentUser->isMutualFollowing($targetUser);
+    }
 }
