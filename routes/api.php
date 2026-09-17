@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ArtistController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\CommentLikeController;
+use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DiaryController;
 use App\Http\Controllers\Api\DiaryLikeController;
 use App\Http\Controllers\Api\DiaryPublicController;
@@ -66,6 +67,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/users/{user}/block', [UserBlockController::class, 'destroy'])->whereNumber('user');
     Route::get('/users/user-blocks', [UserBlockController::class, 'blocks']);
     // Route::delete('/blocks/bulk-destroy', [UserBlockController::class, 'bulkDestroy'])->name('blocks.bulk-destroy');
+
+    Route::get('/conversations', [ConversationController::class, 'index']);
 });
 
 Route::prefix('notifications')->middleware('auth:sanctum')->group(function () {
