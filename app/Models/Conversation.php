@@ -30,7 +30,7 @@ class Conversation extends Model
         return $this->hasOne(Message::class)->latestOfMany();
     }
 
-    // 相手ユーザーを取得する
+    // 相手ユーザーを取得するヘルパーメソッド
     public function otherUser(User $currentUser)
     {
         return $this->user_one_id === $currentUser->id ? $this->userTwo : $this->userOne;
