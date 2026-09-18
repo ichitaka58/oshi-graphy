@@ -23,7 +23,7 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,
 
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+    return $request->user()->makeVisible(['email', 'is_admin']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {
