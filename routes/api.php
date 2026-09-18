@@ -69,6 +69,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::delete('/blocks/bulk-destroy', [UserBlockController::class, 'bulkDestroy'])->name('blocks.bulk-destroy');
 
     Route::get('/conversations', [ConversationController::class, 'index']);
+    Route::get('/conversations/{conversation}', [ConversationController::class, 'show'])->whereNumber('conversation');
 });
 
 Route::prefix('notifications')->middleware('auth:sanctum')->group(function () {

@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class ConversationController extends Controller
 {
+    // DM（会話）一覧の取得
     public function index(Request $request)
     {
         $currentUser = $request->user();
@@ -28,12 +30,27 @@ class ConversationController extends Controller
             // gt()はCarbon日時比較用メソッド greater then（より大きい）
             $conversation->is_unread = $conversation->last_message_at !== null
                 && (is_null($myReadAt) || $conversation->last_message_at->gt($myReadAt));
-            
+
             $conversation->makeHidden(['userOne', 'userTwo']);
         }
 
         return response()->json([
             'conversations' => $conversations
+        ]);
+    }
+
+    public function show(Request $request, Conversation $conversation)
+    {
+        Gate::authorize('view', $conversation);
+
+        // 相手を取得
+        $conversation->other_user = $conversation->otherUser($request->user());
+        $conversation->makeHidden(['userOne', 'userTwo']);
+        $messages = $conversation->messages()->latest()->latest('id')->paginate(10);
+
+        return response()->json([
+            'conversation' => $conversation,
+            'messages' => $messages,
         ]);
     }
 }
