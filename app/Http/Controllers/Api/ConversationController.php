@@ -22,10 +22,8 @@ class ConversationController extends Controller
         foreach ($conversations as $conversation) {
             // 相手を取得
             $conversation->other_user = $conversation->otherUser($currentUser);
-            // 自分の既読日時を取得
-            $myReadAt = $conversation->user_one_id === $currentUser->id
-                ? $conversation->user_one_read_at
-                : $conversation->user_two_read_at;
+            // 自分の既読日時を取得 readAtFor()はConversationモデルに定義したヘルパーメソッド
+            $myReadAt = $conversation->readAtFor($currentUser);
             // 「last_message_atがあり、かつ自分のread_atが無いか、last_message_atより前」なら未読
             // gt()はCarbon日時比較用メソッド greater then（より大きい）
             $conversation->is_unread = $conversation->last_message_at !== null

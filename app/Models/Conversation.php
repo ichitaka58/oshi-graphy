@@ -7,7 +7,25 @@ use Illuminate\Database\Eloquent\Model;
 
 class Conversation extends Model
 {
-    protected $fillable = ['user_one_id', 'user_two_id'];
+    protected $fillable = [
+        'user_one_id',
+        'user_two_id',
+        'last_message_at',
+        'user_one_read_at',
+        'user_two_read_at'
+    ];
+
+    /**
+     * 文字列をdatetime型に変換し、比較できるようにする
+     */
+    protected function casts(): array
+    {
+        return [
+            'last_message_at' => 'datetime',
+            'user_one_read_at' => 'datetime',
+            'user_two_read_at' => 'datetime',
+        ];
+    }
 
     public function userOne()
     {
@@ -42,5 +60,20 @@ class Conversation extends Model
         return $query->where(function (Builder $q) use ($user) {
             $q->where('user_one_id', $user->id)->orWhere('user_two_id', $user->id);
         });
+    }
+
+    // 自分の既読日時のカラムを取得するヘルパーメソッド
+    public function readAtColumnFor(User $user)
+    {
+        return $this->user_one_id === $user->id
+            ? 'user_one_read_at'
+            : 'user_two_read_at';
+    }
+
+    // 自分の既読日時の値を取得するヘルパーメソッド
+    public function readAtFor(User $user)
+    {
+        $column = $this->readAtColumnFor($user);
+        return $this->$column;
     }
 }
