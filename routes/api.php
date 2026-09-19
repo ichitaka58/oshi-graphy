@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DiaryController;
 use App\Http\Controllers\Api\DiaryLikeController;
 use App\Http\Controllers\Api\DiaryPublicController;
+use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PasswordController;
 use App\Http\Controllers\Api\ProfileController;
@@ -70,6 +71,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/conversations', [ConversationController::class, 'index']);
     Route::get('/conversations/{conversation}', [ConversationController::class, 'show'])->whereNumber('conversation');
+
+    Route::post('/conversations/{conversation}/messages', [MessageController::class, 'store'])->middleware('throttle:30,1,messages')->whereNumber('conversation');
 });
 
 Route::prefix('notifications')->middleware('auth:sanctum')->group(function () {
@@ -85,4 +88,3 @@ Route::middleware(['auth:sanctum', 'can:access-admin'])->prefix('admin')->group(
     Route::apiResource('artists', ArtistController::class);
     // 他に管理者限定のものがあればここへ
 });
-

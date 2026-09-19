@@ -19,12 +19,6 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'is_admin' => 'boolean',
-    ];
-    // $castsは特定の型に自動変換する。is_adminを数値0or1からtrue/falseへ
-
     protected $fillable = [
         'name',
         'email',
@@ -48,7 +42,7 @@ class User extends Authenticatable
 
     /**
      * Get the attributes that should be cast.
-     *
+     * casts()は特定の型に自動変換する。is_adminを数値0or1からtrue/falseへ
      * @return array<string, string>
      */
     protected function casts(): array
@@ -56,6 +50,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
         ];
     }
 
