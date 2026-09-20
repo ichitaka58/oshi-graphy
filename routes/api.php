@@ -74,6 +74,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/conversations/{conversation}/messages', [MessageController::class, 'store'])->middleware('throttle:30,1,messages')->whereNumber('conversation');
     Route::post('/conversations/{conversation}/read', [ConversationController::class, 'read'])->whereNumber('conversation');
+    Route::get('/conversations/unread-count', [ConversationController::class, 'unreadCount']);
 });
 
 Route::prefix('notifications')->middleware('auth:sanctum')->group(function () {
