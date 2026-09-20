@@ -65,4 +65,14 @@ class ConversationController extends Controller
         // ステータスコード204 No Contentを返す
         return response()->noContent();
     }
+
+    // 未読の会話数を取得
+    public function unreadCount(Request $request)
+    {
+        $unreadCount = Conversation::unreadFor($request->user())->count();
+
+        return response()->json([
+            'unread_count' => $unreadCount,
+        ]);
+    }
 }
