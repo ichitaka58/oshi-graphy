@@ -73,6 +73,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/conversations/{conversation}', [ConversationController::class, 'show'])->whereNumber('conversation');
 
     Route::post('/conversations/{conversation}/messages', [MessageController::class, 'store'])->middleware('throttle:30,1,messages')->whereNumber('conversation');
+    Route::post('/conversations/{conversation}/read', [ConversationController::class, 'read'])->whereNumber('conversation');
 });
 
 Route::prefix('notifications')->middleware('auth:sanctum')->group(function () {
