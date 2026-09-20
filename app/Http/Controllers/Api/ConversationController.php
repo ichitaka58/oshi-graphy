@@ -37,6 +37,7 @@ class ConversationController extends Controller
         ]);
     }
 
+    // 会話のメッセージ一覧を取得
     public function show(Request $request, Conversation $conversation)
     {
         Gate::authorize('view', $conversation);
@@ -50,5 +51,18 @@ class ConversationController extends Controller
             'conversation' => $conversation,
             'messages' => $messages,
         ]);
+    }
+
+    // 自分のread_atを更新 既読にする
+    public function read(Request $request, Conversation $conversation)
+    {
+        Gate::authorize('view', $conversation);
+
+        $conversation->update([
+            $conversation->readAtColumnFor($request->user()) => now(),
+        ]);
+
+        // ステータスコード204 No Contentを返す
+        return response()->noContent();
     }
 }
