@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
@@ -74,5 +75,27 @@ class ConversationController extends Controller
         return response()->json([
             'unread_count' => $unreadCount,
         ]);
+    }
+
+    // 会話の作成、取得
+    public function store(Request $request, User $user)
+    {
+        Gate::authorize('message', $user);
+
+        $myId = $request->user()->id;
+        $userOneId = min($myId, $user->id); // idの小さい方
+        $userTwoId = max($myId, $user->id); // 大きい方
+
+        $conversation = Conversation::firstOrCreate([
+            'user_one_id' => $userOneId,
+            'user_two_id' => $userTwoId
+        ]);
+
+        $status = $conversation->wasRecentlyCreated ? 201 : 200;
+        $conversation->refresh(); // DBから読み直して全カラムを揃える（新規と既存の時でレスポンスの形を揃える）
+
+        return response()->json([
+            'conversation' => $conversation,
+        ], $status);
     }
 }
