@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Block;
 use App\Models\Conversation;
 use App\Models\Follow;
 use App\Models\User;
@@ -198,6 +199,82 @@ it('【会話一覧】未認証では取得できない', function () {
     makeConversation($this->me, $this->target);
 
     $response = $this->getJson("/api/conversations");
+
+    $response->assertStatus(401);
+});
+
+it('【会話詳細】参加者は会話とメッセージを取得できる', function () {
+    /** @var \Tests\TestCase $this */
+    $conversation = makeConversation($this->me, $this->target);
+    $conversation->messages()->create(['sender_id' => $this->me->id, 'body' => '自分の会話のメッセージ']);
+
+    $response = $this->withToken($this->token)->getJson("/api/conversations/{$conversation->id}");
+
+    $response->assertStatus(200);
+    $response->assertJsonPath('conversation.id', $conversation->id);
+    $response->assertJsonPath('conversation.other_user.id', $this->target->id);
+    $response->assertJsonCount(1, 'messages.data');
+    $response->assertJsonPath('messages.data.0.body', '自分の会話のメッセージ');
+    $response->assertJsonMissingPath('conversation.other_user.email');
+    $response->assertJsonMissingPath('conversation.user_two');
+});
+
+it('【会話詳細】メッセージが新しい順に返る', function () {
+    /** @var \Tests\TestCase $this */
+    $conversation = makeConversation($this->me, $this->target);
+    $conversation->messages()->create(['sender_id' => $this->me->id, 'body' => '1番目のメッセージ']);
+    $this->travel(1)->second();
+    $conversation->messages()->create(['sender_id' => $this->me->id, 'body' => '2番目のメッセージ']);
+
+    $response = $this->withToken($this->token)->getJson("/api/conversations/{$conversation->id}");
+
+    $response->assertStatus(200);
+    $response->assertJsonPath('messages.data.0.body', '2番目のメッセージ');
+});
+
+it('【会話詳細】11件目は2ページ目に入る', function () {
+    /** @var \Tests\TestCase $this */
+    $conversation = makeConversation($this->me, $this->target);
+    for ($i=1; $i <= 11; $i++) {
+        $conversation->messages()->create(['sender_id' => $this->me->id, 'body' => "{$i}番目のメッセージ"]);
+    }
+
+    $response = $this->withToken($this->token)->getJson("/api/conversations/{$conversation->id}?page=2");
+
+    $response->assertStatus(200);
+    $response->assertJsonCount(1, 'messages.data');
+    $response->assertJsonPath('messages.data.0.body', '1番目のメッセージ');
+});
+
+it('【会話詳細】第三者は見られない', function () {
+    /** @var \Tests\TestCase $this */
+    $conversation = makeConversation($this->me, $this->target);
+    $conversation->messages()->create(['sender_id' => $this->me->id, 'body' => '自分の会話のメッセージ']);
+    $otherUser = User::factory()->create();
+    $otherUserToken = $otherUser->createToken('test_token')->plainTextToken;
+
+    $response = $this->withToken($otherUserToken)->getJson("/api/conversations/{$conversation->id}");
+
+    $response->assertStatus(403);
+});
+
+it('【会話詳細】ブロックされたら履歴も見られない', function () {
+    /** @var \Tests\TestCase $this */
+    $conversation = makeConversation($this->me, $this->target);
+    $conversation->messages()->create(['sender_id' => $this->me->id, 'body' => '自分の会話のメッセージ']);
+    Block::create(['blocker_id' => $this->target->id, 'blocked_id' => $this->me->id]);
+
+    $response = $this->withToken($this->token)->getJson("/api/conversations/{$conversation->id}");
+
+    $response->assertStatus(403);
+});
+
+it('【会話詳細】未認証では取得できない', function () {
+    /** @var \Tests\TestCase $this */
+    $conversation = makeConversation($this->me, $this->target);
+    $conversation->messages()->create(['sender_id' => $this->me->id, 'body' => '自分の会話のメッセージ']);
+
+    $response = $this->getJson("/api/conversations/{$conversation->id}");
 
     $response->assertStatus(401);
 });
