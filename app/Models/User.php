@@ -19,12 +19,6 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'is_admin' => 'boolean',
-    ];
-    // $castsは特定の型に自動変換する。is_adminを数値0or1からtrue/falseへ
-
     protected $fillable = [
         'name',
         'email',
@@ -41,11 +35,14 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'email',
+        'is_admin',
+        'email_verified_at',
     ];
 
     /**
      * Get the attributes that should be cast.
-     *
+     * casts()は特定の型に自動変換する。is_adminを数値0or1からtrue/falseへ
      * @return array<string, string>
      */
     protected function casts(): array
@@ -53,6 +50,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
         ];
     }
 
@@ -78,9 +76,8 @@ class User extends Authenticatable
 
     public function isFollowing(User $other): bool
     {
-        if($this->id === $other->id) return false;
+        if ($this->id === $other->id) return false;
         return $this->followings()->whereKey($other->id)->exists();
-
     }
 
     public function blocks()
@@ -95,9 +92,16 @@ class User extends Authenticatable
 
     public function isBlocking(User $other): bool
     {
-        if($this->id === $other->id) return false;
+        if ($this->id === $other->id) return false;
         return $this->blocks()->whereKey($other->id)->exists();
     }
+
+    // 相互フォローしているか（DM機能   ）
+    public function isMutualFollowing(User $other): bool
+    {
+        return $this->isFollowing($other) && $other->isFollowing($this);
+    }
+
 
     protected $appends = ['icon_url'];
 
@@ -117,10 +121,10 @@ class User extends Authenticatable
      */
     protected static function booted(): void
     {
-        static::deleting(function(User $user) {
+        static::deleting(function (User $user) {
 
             // ユーザーアイコンの物理削除
-            if(!empty($user->icon_path)) {
+            if (!empty($user->icon_path)) {
                 Storage::disk(config('filesystems.media_disk'))->delete($user->icon_path);
             }
 
@@ -128,14 +132,14 @@ class User extends Authenticatable
             // ※ comments.user_id は cascadeOnDelete のため、このユーザー削除時に
             //   DBレベルで直接コメントが消える。DBのcascadeはEloquentイベントを
             //   発火させないため、ここで先に手動で片付けておく必要がある。
-            $user->comments()->select('id')->chunkById(100, function($chunk) {
+            $user->comments()->select('id')->chunkById(100, function ($chunk) {
                 Like::where('likeable_type', Comment::class)
                     ->whereIn('likeable_id', $chunk->pluck('id'))
                     ->delete();
             });
 
             // chunkById:ID順に100件ずつとりだして処理する関数
-            $user->diaries()->select('id')->chunkById(100, function($chunk){
+            $user->diaries()->select('id')->chunkById(100, function ($chunk) {
                 $chunk->each->delete(); // それぞれを削除
             });
         });

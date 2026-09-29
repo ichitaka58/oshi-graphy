@@ -5,9 +5,11 @@ use App\Http\Controllers\Api\ArtistController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\CommentLikeController;
+use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DiaryController;
 use App\Http\Controllers\Api\DiaryLikeController;
 use App\Http\Controllers\Api\DiaryPublicController;
+use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PasswordController;
 use App\Http\Controllers\Api\ProfileController;
@@ -22,7 +24,7 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,
 
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+    return $request->user()->makeVisible(['email', 'is_admin']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -66,6 +68,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/users/{user}/block', [UserBlockController::class, 'destroy'])->whereNumber('user');
     Route::get('/users/user-blocks', [UserBlockController::class, 'blocks']);
     // Route::delete('/blocks/bulk-destroy', [UserBlockController::class, 'bulkDestroy'])->name('blocks.bulk-destroy');
+
+    Route::get('/conversations', [ConversationController::class, 'index']);
+    Route::get('/conversations/{conversation}', [ConversationController::class, 'show'])->whereNumber('conversation');
+
+    Route::post('/conversations/{conversation}/messages', [MessageController::class, 'store'])->middleware('throttle:30,1,messages')->whereNumber('conversation');
+    Route::post('/conversations/{conversation}/read', [ConversationController::class, 'read'])->whereNumber('conversation');
+    Route::get('/conversations/unread-count', [ConversationController::class, 'unreadCount']);
+    Route::post('/users/{user}/conversations', [ConversationController::class, 'store'])->whereNumber('user');
 });
 
 Route::prefix('notifications')->middleware('auth:sanctum')->group(function () {
@@ -81,4 +91,3 @@ Route::middleware(['auth:sanctum', 'can:access-admin'])->prefix('admin')->group(
     Route::apiResource('artists', ArtistController::class);
     // 他に管理者限定のものがあればここへ
 });
-
