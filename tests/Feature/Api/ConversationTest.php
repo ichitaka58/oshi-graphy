@@ -278,3 +278,111 @@ it('【会話詳細】未認証では取得できない', function () {
 
     $response->assertStatus(401);
 });
+
+it('【既読】既読にすると自分の read_at が入る', function () {
+    /** @var \Tests\TestCase $this */
+    $conversation = makeConversation($this->me, $this->target);
+    $this->freezeSecond(); // 時刻を止める（秒の頭で止める）
+
+    $response = $this->withToken($this->token)->postJson("/api/conversations/{$conversation->id}/read");
+
+    $response->assertStatus(204);
+    $conversation->refresh();
+    // 現在時刻と比較 時刻を止めているので同じになる想定
+    expect($conversation->user_one_read_at->eq(now()))->toBeTrue();
+    expect($conversation->user_two_read_at)->toBeNull();
+});
+
+it('【既読】第三者は既読にできない', function () {
+    /** @var \Tests\TestCase $this */
+    $conversation = makeConversation($this->me, $this->target);
+    $otherUser = User::factory()->create();
+    $otherUserToken = $otherUser->createToken('test_token')->plainTextToken;
+
+    $response = $this->withToken($otherUserToken)->postJson("/api/conversations/{$conversation->id}/read");
+
+    $response->assertStatus(403);
+    $conversation->refresh();
+    // DBも確認
+    expect($conversation->user_one_read_at)->toBeNull();
+    expect($conversation->user_two_read_at)->toBeNull();
+});
+
+it('【既読】未認証では既読にできない', function () {
+    /** @var \Tests\TestCase $this */
+    $conversation = makeConversation($this->me, $this->target);
+
+    $response = $this->postJson("/api/conversations/{$conversation->id}/read");
+
+    $response->assertStatus(401);
+});
+
+it('【未読数】未読の会話数が数えられる', function () {
+    /** @var \Tests\TestCase $this */
+    $conversationA = makeConversation($this->me, $this->target);
+    $conversationA->messages()->create(['sender_id' => $this->me->id, 'body' => '自分の会話のメッセージ']);
+    $userB = User::factory()->create();
+    $conversationB = makeConversation($userB, $this->me);
+    $conversationB->messages()->create(['sender_id' => $userB->id, 'body' => 'userBの会話のメッセージ']);
+    $userC = User::factory()->create();
+    $conversationC = makeConversation($userC, $this->me);
+    $conversationC->messages()->create(['sender_id' => $userC->id, 'body' => 'userCの会話のメッセージ']);
+
+    $response = $this->withToken($this->token)->getJson("/api/conversations/unread-count");
+
+    $response->assertStatus(200);
+    $response->assertJsonPath('unread_count', 2);
+});
+
+it('【未読数】既読にすると未読数が減る', function () {
+    /** @var \Tests\TestCase $this */
+    $conversationA = makeConversation($this->me, $this->target);
+    $conversationA->messages()->create(['sender_id' => $this->me->id, 'body' => '自分の会話のメッセージ']);
+    $userB = User::factory()->create();
+    $conversationB = makeConversation($userB, $this->me);
+    $conversationB->messages()->create(['sender_id' => $userB->id, 'body' => 'userBの会話のメッセージ']);
+    // 未読会話数を調べる
+    $response = $this->withToken($this->token)->getJson("/api/conversations/unread-count");
+    $response->assertJsonPath('unread_count', 1); // 未読が1
+
+    // 未読の会話を既読にする
+    $this->withToken($this->token)->postJson("/api/conversations/{$conversationB->id}/read")->assertStatus(204);
+
+    // 再度、未読会話数を調べる
+    $response = $this->withToken($this->token)->getJson("/api/conversations/unread-count");
+
+    $response->assertStatus(200);
+    $response->assertJsonPath('unread_count', 0);
+});
+
+it('【未読数】メッセージの無い会話は数えない', function () {
+    /** @var \Tests\TestCase $this */
+    makeConversation($this->me, $this->target);
+
+    $response = $this->withToken($this->token)->getJson("/api/conversations/unread-count");
+
+    $response->assertStatus(200);
+    $response->assertJsonPath('unread_count', 0);
+});
+
+it('【未読数】他人同士の会話は数えない', function () {
+    /** @var \Tests\TestCase $this */
+    $otherUser = User::factory()->create();
+    $conversation = makeConversation($otherUser, $this->target);
+    $conversation->messages()->create(['sender_id' => $otherUser->id, 'body' => '他人同士の会話のメッセージ']);
+
+    $response = $this->withToken($this->token)->getJson("/api/conversations/unread-count");
+
+    $response->assertStatus(200);
+    $response->assertJsonPath('unread_count', 0);
+});
+
+it('【未読数】未認証では取得できない', function () {
+    /** @var \Tests\TestCase $this */
+    $conversation = makeConversation($this->me, $this->target);
+    $conversation->messages()->create(['sender_id' => $this->target->id, 'body' => '相手のメッセージ']);
+
+    $response = $this->getJson("/api/conversations/unread-count");
+
+    $response->assertStatus(401);
+});
