@@ -28,7 +28,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('diaries', DiaryController::class);
+    Route::apiResource('diaries', DiaryController::class)->names('api.diaries');
     Route::get('/public-diaries', [DiaryPublicController::class, 'index']);
     Route::get('/public-diaries/{diary}', [DiaryPublicController::class, 'show']);
     Route::get('/public-diaries/users/{user}', [DiaryPublicController::class, 'user'])->whereNumber('user');
@@ -88,6 +88,6 @@ Route::prefix('notifications')->middleware('auth:sanctum')->group(function () {
 });
 
 Route::middleware(['auth:sanctum', 'can:access-admin'])->prefix('admin')->group(function () {
-    Route::apiResource('artists', ArtistController::class);
+    Route::apiResource('artists', ArtistController::class)->names('api.artists');
     // 他に管理者限定のものがあればここへ
 });
