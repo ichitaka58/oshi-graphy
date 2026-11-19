@@ -48,7 +48,6 @@ class CommentOrReplyNotification extends Notification
             'message' => $this->isReply
                         ? "{$this->actorName}さんがあなたのコメント「{$this->excerpt}」に返信しました。"
                         : "{$this->actorName}さんがあなたの日記「{$this->excerpt}」にコメントしました。",
-            'url' => route('public.diaries.show', $this->diaryId) . '#comment-' . $this->commentId,
         ];
     }
 

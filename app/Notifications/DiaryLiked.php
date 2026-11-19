@@ -44,7 +44,6 @@ class DiaryLiked extends Notification implements ShouldQueue
             'actor_user_id' => $this->actor->id,
             'actor_name' => $this->actor->name,
             'message' => "{$this->actor->name}さんがあなたの日記「{$this->excerpt}」にいいねしました。",
-            'url' => route('diaries.show', $this->diary->id),
         ];
     }
 
