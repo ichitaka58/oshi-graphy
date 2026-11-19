@@ -123,4 +123,10 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    | Bladeのフロントをテスト以外で使わないための設定 
+    */
+
+    'blade_frontend' => env('BLADE_FRONTEND_ENABLED', false),
+
 ];
