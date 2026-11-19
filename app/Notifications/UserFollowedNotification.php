@@ -39,7 +39,6 @@ class UserFollowedNotification extends Notification
             'actor_name' => $this->actor->name,
             'target_user_id' => $this->target->id,
             'message' => "{$this->actor->name}さんがあなたをフォローしました。",
-            'url' => route('user.profile.show', $this->actor->id),
         ];
     }
 

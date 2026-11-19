@@ -43,7 +43,6 @@ class CommentLiked extends Notification
             'actor_user_id' => $this->actor->id,
             'actor_name' => $this->actor->name,
             'message' => "{$this->actor->name}さんがあなたのコメント「{$this->excerpt}」にいいねしました。",
-            'url' => route('public.diaries.show', $this->comment->diary_id) . '#comment-' . $this->comment->id,
         ];
     }
 
