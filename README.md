@@ -13,7 +13,7 @@
 
 本リポジトリは、Next.js製フロントエンド **[oshi-graphy-frontend](https://github.com/ichitaka58/oshi-graphy-frontend)** に対して REST API（`routes/api.php`、Laravel Sanctum によるトークン認証）を提供するバックエンドです。ユーザーが実際に触れる画面は oshi-graphy-frontend 側にあり、本リポジトリはデータの永続化・認証・ビジネスロジックを担当します。
 
-> **補足:** 本プロジェクトはもともと Blade + Alpine.js によるフルスタックのWebアプリとして開発したものです。フロントエンドを Next.js で作り直すにあたり、本リポジトリに Sanctum トークン認証ベースの REST API（`routes/api.php` 配下）を追加し、以降はそちらがフロントエンドから利用される現行の窓口になっています。移行時の経緯として、旧来の Blade ビュー（`routes/web.php`、セッション認証）もコード上は残っています。
+> **補足:** 本プロジェクトはもともと Blade + Alpine.js によるフルスタックのWebアプリとして開発したものです。フロントエンドを Next.js で作り直すにあたり、本リポジトリに Sanctum トークン認証ベースの REST API（`routes/api.php` 配下）を追加し、以降はそちらがフロントエンドから利用される現行の窓口になっています。旧来の Blade ビュー（`routes/web.php`、セッション認証）はコード上に残していますが、`BLADE_FRONTEND_ENABLED` が無効（初期値）のときは読み込まれず、トップページは Next.js（[https://oshi-graphy.com](https://oshi-graphy.com)）へリダイレクトされます。本番環境では無効にしており、テスト実行時のみ `phpunit.xml` で有効にしています。
 
 ## 📖 アプリの概要
 Oshi-Graphy（推しグラフィー）は、80〜90年代から今も活躍するアーティストの推し活を楽しむ**中高年世代を対象**にした推し活ダイアリー共有アプリです。
@@ -31,6 +31,10 @@ Oshi-Graphy（推しグラフィー）は、80〜90年代から今も活躍す�
 - **交流機能**
   - コメント & いいね（ダイアリー／コメントに対するスレッド形式）
   - フォロー機能（ユーザー間の相互フォロー／フォロワー一覧）
+- **DM（ダイレクトメッセージ）機能**
+  - 相互フォローしているユーザー同士のみ送信可能（どちらかがブロックしていると送信・閲覧不可）
+  - 会話一覧（最新メッセージ順）、メッセージ履歴（ページネーション）
+  - 既読管理、未読の会話数取得
 - **マイページ・ユーザー管理**
   - ユーザープロフィール（アイコン画像・自己紹介）
   - ブロック機能（ユーザー間の相互ブロック／ブロックユーザー一覧）
@@ -50,6 +54,7 @@ Oshi-Graphy（推しグラフィー）は、80〜90年代から今も活躍す�
 | 日記 | `GET/POST/PUT/DELETE /diaries`, `GET /public-diaries` | `apiResource` |
 | コメント・いいね | `POST /diaries/{diary}/comments`, `POST /diaries/{diary}/like`, `POST /comments/{comment}/like` | コメント投稿は `throttle:20,1` |
 | フォロー・ブロック | `POST /users/{user}/follow`, `POST /users/{user}/block` | 相互フォロー／相互ブロック |
+| DM | `GET /conversations`, `GET /conversations/{conversation}`, `POST /users/{user}/conversations`, `POST /conversations/{conversation}/messages`, `POST /conversations/{conversation}/read`, `GET /conversations/unread-count` | 相互フォロー時のみ（Policy で判定）。メッセージ送信は `throttle:30,1` |
 | 通知 | `GET /notifications`, `GET /notifications/unread-count`, `POST /notifications/mark-all-read` | |
 | アカウント | `PATCH /profile`, `PUT /password`, `PUT /user_profile` | |
 | AIアシスト | `POST /ai/diary-suggest` | Gemini API 連携 |
@@ -96,7 +101,7 @@ cp .env.example .env
 
 # 4. パッケージのインストール
 ./vendor/bin/sail composer install
-./vendor/bin/sail npm install
+./vendor/bin/sail npm install   # 旧Blade UIを使う場合のみ
 
 # 5. アプリケーションキーの生成
 ./vendor/bin/sail artisan key:generate
@@ -104,11 +109,13 @@ cp .env.example .env
 # 6. マイグレーションとシードの実行（必要に応じて）
 ./vendor/bin/sail artisan migrate --seed
 
-# 7. フロントエンドのビルド
+# 7. 旧Blade UIのアセットビルド（旧Blade UIを使う場合のみ）
 ./vendor/bin/sail npm run dev
 ```
 
-設定完了後、`http://localhost` にアクセスして動作を確認できます（旧Blade UI）。実際の画面で動作確認したい場合は、`oshi-graphy-frontend` 側を本リポジトリの `http://localhost` を向くよう設定して起動してください。
+設定完了後、API は `http://localhost/api/*` で利用できます。実際の画面で動作確認したい場合は、`oshi-graphy-frontend` 側を本リポジトリの `http://localhost` を向くよう設定して起動してください。
+
+なお、初期設定では旧Blade UIは無効になっており、`http://localhost` にアクセスすると Next.js 側（`https://oshi-graphy.com`）へリダイレクトされます。ローカルで旧Blade UIを確認したい場合は、`.env` に `BLADE_FRONTEND_ENABLED=true` を追加してください。
 
 ## 🖼 画像ストレージ
 
@@ -146,6 +153,11 @@ erDiagram
     USERS ||--o{ FOLLOWS : "followed"
     USERS ||--o{ BLOCKS : "blocker"
     USERS ||--o{ BLOCKS : "blocked"
+    USERS ||--o{ CONVERSATIONS : "user_one"
+    USERS ||--o{ CONVERSATIONS : "user_two"
+    USERS ||--o{ MESSAGES : "sender"
+
+    CONVERSATIONS ||--o{ MESSAGES : "has many"
 
     ARTISTS ||--o{ DIARIES : "has many"
 
@@ -229,6 +241,26 @@ erDiagram
         bigint user_id FK
         string likeable_type
         bigint likeable_id
+        datetime created_at
+        datetime updated_at
+    }
+
+    CONVERSATIONS {
+        bigint id PK
+        bigint user_one_id FK "idの小さい方"
+        bigint user_two_id FK "idの大きい方"
+        datetime last_message_at
+        datetime user_one_read_at
+        datetime user_two_read_at
+        datetime created_at
+        datetime updated_at
+    }
+
+    MESSAGES {
+        bigint id PK
+        bigint conversation_id FK
+        bigint sender_id FK
+        text   body
         datetime created_at
         datetime updated_at
     }
